@@ -326,7 +326,7 @@ typeEffect();
 
 // === SCROLL REVEAL (Intersection Observer) ===
 const revealElements = document.querySelectorAll(
-    '.reveal, .reveal-left, .reveal-right'
+    '.reveal, .reveal-left, .reveal-right, .reveal-3d'
 );
 
 const revealObserver = new IntersectionObserver(
@@ -345,35 +345,13 @@ const revealObserver = new IntersectionObserver(
 
 revealElements.forEach((el) => revealObserver.observe(el));
 
-// === TIMELINE ROUTE MAP — Scroll Reveal ===
+// === TIMELINE ROUTE MAP & TRACK FILL ===
 const timelineEntries = document.querySelectorAll('.timeline-entry');
-
-const timelineObserver = new IntersectionObserver(
-    (entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                // Stagger based on data-timeline attribute
-                const delay = (parseInt(entry.target.dataset.timeline) || 1) * 150;
-                setTimeout(() => {
-                    entry.target.classList.add('timeline-visible');
-                }, delay);
-                timelineObserver.unobserve(entry.target);
-            }
-        });
-    },
-    {
-        threshold: 0.15,
-        rootMargin: '0px 0px -80px 0px',
-    }
-);
-
-timelineEntries.forEach((el) => timelineObserver.observe(el));
-
-// === TIMELINE TRACK FILL — Scroll-Driven Line ===
 const timelineTrackFill = document.getElementById('timelineTrackFill');
 const timelineSection = document.getElementById('timeline');
+const timelineTrack = document.querySelector('.timeline-track');
 
-if (timelineTrackFill && timelineSection) {
+if (timelineTrackFill && timelineSection && timelineTrack) {
     const updateTrackFill = () => {
         const rect = timelineSection.getBoundingClientRect();
         const sectionTop = rect.top;
@@ -381,7 +359,6 @@ if (timelineTrackFill && timelineSection) {
         const viewportHeight = window.innerHeight;
 
         // Start filling when the timeline enters the viewport
-        // Fully filled when the bottom of the timeline reaches the center of the viewport
         const startOffset = viewportHeight * 0.75;
         const scrolledInto = startOffset - sectionTop;
         const totalDistance = sectionHeight + startOffset - viewportHeight * 0.3;
@@ -390,6 +367,25 @@ if (timelineTrackFill && timelineSection) {
         progress = Math.max(0, Math.min(1, progress));
 
         timelineTrackFill.style.height = `${progress * 100}%`;
+
+        // Reveal timeline entries ONLY when the fill line reaches their dot
+        // The track starts 60px from the top of the timeline section
+        const trackTopOffset = 60;
+        const trackHeight = timelineTrack.clientHeight || (sectionHeight - 100);
+        const currentLineBottom = trackTopOffset + (progress * trackHeight);
+
+        timelineEntries.forEach(entry => {
+            // The node dot is positioned 24px from the top of the entry relative to the timeline container
+            const nodeOffsetTop = entry.offsetTop + 24;
+            
+            // Add a small threshold (10px) so the line touches the dot before revealing
+            if (currentLineBottom >= nodeOffsetTop - 10) {
+                entry.classList.add('timeline-visible');
+            } else {
+                // Hide it again if user scrolls up past the dot
+                entry.classList.remove('timeline-visible');
+            }
+        });
     };
 
     window.addEventListener('scroll', updateTrackFill, { passive: true });
