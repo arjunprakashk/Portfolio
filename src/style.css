@@ -67,6 +67,115 @@ img {
     display: block;
 }
 
+/* === PRELOADER === */
+body.loading {
+    overflow: hidden;
+}
+
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 1s cubic-bezier(0.7, 0, 0.3, 1), visibility 1s;
+    perspective: 2000px;
+}
+
+#preloader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.preloader-content {
+    text-align: center;
+    transform-style: preserve-3d;
+    transition: transform 1.2s cubic-bezier(0.7, 0, 0.3, 1), opacity 1s;
+}
+
+#preloader.fade-out .preloader-content {
+    /* Moves the text towards the top-left hero area as it fades */
+    transform: translate(-20vw, -20vh) scale(0.7) rotateX(20deg);
+    opacity: 0;
+    transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 1s 0.2s;
+}
+
+.preloader-text-wrapper {
+    margin-bottom: 30px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));
+}
+
+.preloader-name {
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 12vw, 6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em; /* Tighter like hero title */
+    color: #111111;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: translateZ(60px) translateY(40px) rotateX(-45deg);
+    animation: preloaderNameEntry 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.preloader-tag {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 10px;
+    color: #999999;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: preloaderTagEntry 1.2s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    text-transform: uppercase;
+}
+
+.preloader-bar {
+    width: 0;
+    height: 1px;
+    background: #111111;
+    margin: 0 auto;
+    animation: preloaderBarGrow 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    opacity: 0.4;
+}
+
+@keyframes preloaderNameEntry {
+    0% {
+        opacity: 0;
+        transform: translateZ(100px) translateY(60px) rotateX(-60deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateZ(0) translateY(0) rotateX(0);
+    }
+}
+
+@keyframes preloaderTagEntry {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes preloaderBarGrow {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
 /* === THREE.JS CANVAS === */
 #bg-canvas {
     position: fixed;
@@ -126,7 +235,17 @@ section {
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-glass);
     z-index: 1000;
-    transition: var(--transition-smooth);
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: navbarReveal 1s 2.8s ease forwards;
+    transition: background var(--transition-smooth);
+}
+
+@keyframes navbarReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .navbar.scrolled {
@@ -140,6 +259,10 @@ section {
     gap: 14px;
 }
 
+.logoimage {
+    perspective: 1000px;
+}
+
 .logoimage img {
     width: 42px;
     height: 42px;
@@ -149,12 +272,28 @@ section {
     background-image: linear-gradient(var(--bg-primary), var(--bg-primary)), var(--gradient-accent);
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    transition: var(--transition-smooth);
+    transition: transform 0.6s var(--transition-spring), box-shadow var(--transition-smooth);
+    transform-style: preserve-3d;
 }
 
-.logoimage img:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+.logoimage:hover img {
+    animation: logoCoinToss 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logoimage:hover img {
+    box-shadow: 0 15px 30px rgba(0, 240, 255, 0.4);
+}
+
+@keyframes logoCoinToss {
+    0% {
+        transform: translateY(0) rotateY(0);
+    }
+    50% {
+        transform: translateY(-18px) rotateY(180deg) scale(1.1);
+    }
+    100% {
+        transform: translateY(0) rotateY(360deg) scale(1);
+    }
 }
 
 .logo {
@@ -292,11 +431,11 @@ section {
 
 .hero-title {
     font-family: var(--font-heading);
-    font-size: 68px;
+    font-size: clamp(2.5rem, 8vw, 68px);
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -1px;
-    animation: heroSlideUp 1s ease forwards;
+    animation: heroSlideUp 1.2s 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .hero-subtitle {
@@ -308,7 +447,7 @@ section {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: heroSlideUp 1s 0.15s ease both;
+    animation: heroSlideUp 1s 3s ease both;
     margin-bottom: 40px;
 }
 
@@ -339,7 +478,7 @@ section {
 .hero-image-wrapper {
     position: relative;
     perspective: 1000px;
-    animation: heroSlideUp 1s 0.3s ease both;
+    animation: heroSlideUp 1s 3.2s ease both;
     display: flex;
     justify-content: center;
 }
@@ -416,7 +555,7 @@ section {
     gap: 16px;
     flex-wrap: wrap;
     margin-top: 40px;
-    animation: heroSlideUp 1s 0.25s ease both;
+    animation: heroSlideUp 1s 3.1s ease both;
 }
 
 .glass-btn {

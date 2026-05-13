@@ -766,3 +766,18 @@ function updateSymbolColors(colorA, colorB) {
         mesh.material.needsUpdate = true;
     });
 }
+// ================================================
+// PRELOADER
+// ================================================
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    const body = document.body;
+
+    if (preloader) {
+        // Show preloader for at least 2.5s to let the 3D name animation shine
+        setTimeout(() => {
+            preloader.classList.add('fade-out');
+            body.classList.remove('loading');
+        }, 2500);
+    }
+});
