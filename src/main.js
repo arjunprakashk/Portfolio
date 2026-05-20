@@ -781,3 +781,112 @@ window.addEventListener('load', () => {
         }, 2500);
     }
 });
+
+// ================================================
+// GA4 — ANALYTICS EVENT TRACKING
+// ================================================
+
+// Helper: safely call gtag (no-op if blocked by adblocker)
+function trackEvent(eventName, params = {}) {
+    if (typeof gtag === 'function') {
+        gtag('event', eventName, params);
+    }
+}
+
+// === SECTION VIEW TRACKING ===
+// Track which sections visitors actually scroll to and view
+const sectionIds = ['home', 'summary', 'about', 'skills', 'experience', 'projects', 'objective', 'contact'];
+const viewedSections = new Set();
+
+const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const sectionId = entry.target.id;
+            if (!viewedSections.has(sectionId)) {
+                viewedSections.add(sectionId);
+                trackEvent('section_view', {
+                    section_name: sectionId,
+                    event_category: 'engagement'
+                });
+            }
+        }
+    });
+}, { threshold: 0.3 });
+
+sectionIds.forEach(id => {
+    const section = document.getElementById(id);
+    if (section) sectionObserver.observe(section);
+});
+
+// === CTA CLICK TRACKING ===
+// Track CV download
+const cvBtn = document.querySelector('.cv-btn');
+if (cvBtn) {
+    cvBtn.addEventListener('click', () => {
+        trackEvent('cv_download', {
+            event_category: 'conversion',
+            event_label: 'Resume Download'
+        });
+    });
+}
+
+// Track social link clicks (hero + contact)
+document.querySelectorAll('.glass-btn, .contact-box, .project-link-btn').forEach(link => {
+    link.addEventListener('click', () => {
+        const href = link.getAttribute('href') || '';
+        let platform = 'unknown';
+
+        if (href.includes('github.com')) platform = 'GitHub';
+        else if (href.includes('linkedin.com')) platform = 'LinkedIn';
+        else if (href.includes('mailto:')) platform = 'Email';
+        else if (href.includes('linktr.ee')) platform = 'Linktree';
+        else if (href.includes('instagram.com')) platform = 'Instagram';
+        else if (href.includes('smartuplearning')) platform = 'SmartUp ERP Demo';
+        else if (href.includes('pawsnest')) platform = 'PawsNest Demo';
+        else platform = link.textContent.trim().substring(0, 30);
+
+        trackEvent('cta_click', {
+            event_category: 'engagement',
+            event_label: platform,
+            link_url: href
+        });
+    });
+});
+
+// === SCROLL DEPTH TRACKING ===
+const scrollMilestones = [25, 50, 75, 100];
+const reachedMilestones = new Set();
+
+window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+
+    scrollMilestones.forEach(milestone => {
+        if (scrollPercent >= milestone && !reachedMilestones.has(milestone)) {
+            reachedMilestones.add(milestone);
+            trackEvent('scroll_depth', {
+                event_category: 'engagement',
+                event_label: `${milestone}%`,
+                value: milestone
+            });
+        }
+    });
+}, { passive: true });
+
+// === TIME ON PAGE ENGAGEMENT ===
+const timeThresholds = [30, 60, 120, 300];
+const firedTimeEvents = new Set();
+
+timeThresholds.forEach(seconds => {
+    setTimeout(() => {
+        if (!firedTimeEvents.has(seconds)) {
+            firedTimeEvents.add(seconds);
+            trackEvent('time_on_page', {
+                event_category: 'engagement',
+                event_label: `${seconds}s`,
+                value: seconds
+            });
+        }
+    }, seconds * 1000);
+});

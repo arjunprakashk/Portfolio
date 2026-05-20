@@ -1,0 +1,6 @@
+# Portfolio - Arjun K
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://arjunk.onrender.com/sitemap.xml
