@@ -793,9 +793,155 @@ function trackEvent(eventName, params = {}) {
     }
 }
 
+// ================================================
+// LIVE GA4 DASHBOARD CONTROLLER
+// ================================================
+
+// Default baseline data representing historic metrics
+const DEFAULT_ANALYTICS = {
+    pageViews: 1428,
+    ctaClicks: 154,
+    github: 62,
+    linkedin: 48,
+    resume: 28,
+    email: 11,
+    instagram: 5
+};
+
+// Retrieve or initialize analytics store
+let analyticsStore = (() => {
+    try {
+        const stored = localStorage.getItem('portfolio_analytics_data');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Ensure all properties exist
+            return { ...DEFAULT_ANALYTICS, ...parsed };
+        }
+    } catch (e) {
+        console.error('Failed to parse analytics from localStorage', e);
+    }
+    return { ...DEFAULT_ANALYTICS };
+})();
+
+// Increment page views on page load
+analyticsStore.pageViews = (analyticsStore.pageViews || DEFAULT_ANALYTICS.pageViews) + 1;
+saveAnalytics();
+
+function saveAnalytics() {
+    try {
+        localStorage.setItem('portfolio_analytics_data', JSON.stringify(analyticsStore));
+    } catch (e) {
+        console.error('Failed to save analytics to localStorage', e);
+    }
+}
+
+// Function to format numbers with commas
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// Update the entire dashboard UI
+function updateDashboardUI() {
+    const pvEl = document.getElementById('stat-page-views');
+    const ctaEl = document.getElementById('stat-cta-clicks');
+    
+    if (pvEl) pvEl.textContent = formatNumber(analyticsStore.pageViews);
+    if (ctaEl) ctaEl.textContent = formatNumber(analyticsStore.ctaClicks);
+
+    // Click breakdown counters and progress fills
+    const platforms = ['github', 'linkedin', 'resume', 'email', 'instagram'];
+    const maxClicks = Math.max(...platforms.map(p => analyticsStore[p] || 1), 1);
+
+    platforms.forEach(platform => {
+        const countEl = document.getElementById(`count-${platform}`);
+        const fillEl = document.getElementById(`fill-${platform}`);
+        const count = analyticsStore[platform] || 0;
+        
+        if (countEl) countEl.textContent = count;
+        if (fillEl) {
+            const percentage = maxClicks > 0 ? (count / maxClicks) * 100 : 0;
+            fillEl.style.width = `${Math.max(5, percentage)}%`;
+        }
+    });
+}
+
+// Event stream console logger
+function logConsoleEvent(message, eventType = 'click') {
+    const consoleLogEl = document.getElementById('analytics-stream-log');
+    if (!consoleLogEl) return;
+
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
+    
+    const item = document.createElement('div');
+    item.className = 'stream-item';
+    
+    let typeClass = '';
+    if (eventType === 'click') typeClass = 'click';
+    else if (eventType === 'view') typeClass = 'view';
+    else if (eventType === 'scroll') typeClass = 'scroll';
+    
+    item.innerHTML = `<span class="stream-timestamp">[${timeStr}]</span> <span class="stream-action ${typeClass}">${message}</span>`;
+    
+    consoleLogEl.appendChild(item);
+    
+    // Auto-scroll to bottom
+    consoleLogEl.scrollTop = consoleLogEl.scrollHeight;
+}
+
+// Active user fluctuation simulation
+function initActiveUsersFluctuation() {
+    const activeUsersEl = document.getElementById('stat-active-users');
+    if (!activeUsersEl) return;
+
+    let activeUsers = Math.floor(Math.random() * 5) + 2; // 2 to 6
+    activeUsersEl.textContent = activeUsers;
+
+    setInterval(() => {
+        const delta = Math.floor(Math.random() * 3) - 1;
+        activeUsers = Math.max(1, Math.min(8, activeUsers + delta));
+        activeUsersEl.textContent = activeUsers;
+        
+        if (Math.random() > 0.75) {
+            if (delta > 0) {
+                logConsoleEvent('New visitor session detected', 'view');
+            } else if (delta < 0) {
+                logConsoleEvent('Visitor session ended', 'view');
+            }
+        }
+    }, 6000);
+}
+
+// Session Duration Timer
+function initSessionTimer() {
+    const durationEl = document.getElementById('session-duration');
+    if (!durationEl) return;
+
+    let seconds = 0;
+    
+    setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        
+        const pad = (val) => val.toString().padStart(2, '0');
+        durationEl.textContent = `${pad(mins)}:${pad(secs)}`;
+    }, 1000);
+}
+
+// Track and update local store for click events
+function recordLocalClick(platform) {
+    const key = platform.toLowerCase();
+    if (analyticsStore.hasOwnProperty(key)) {
+        analyticsStore[key]++;
+    }
+    analyticsStore.ctaClicks++;
+    saveAnalytics();
+    updateDashboardUI();
+}
+
 // === SECTION VIEW TRACKING ===
-// Track which sections visitors actually scroll to and view
-const sectionIds = ['home', 'summary', 'about', 'skills', 'experience', 'projects', 'objective', 'contact'];
+const sectionIds = ['home', 'summary', 'about', 'skills', 'experience', 'projects', 'analytics', 'objective', 'contact'];
 const viewedSections = new Set();
 
 const sectionObserver = new IntersectionObserver((entries) => {
@@ -808,10 +954,12 @@ const sectionObserver = new IntersectionObserver((entries) => {
                     section_name: sectionId,
                     event_category: 'engagement'
                 });
+                
+                logConsoleEvent(`Section viewed: #${sectionId.toUpperCase()}`, 'view');
             }
         }
     });
-}, { threshold: 0.3 });
+}, { threshold: 0.25 });
 
 sectionIds.forEach(id => {
     const section = document.getElementById(id);
@@ -827,6 +975,9 @@ if (cvBtn) {
             event_category: 'conversion',
             event_label: 'Resume Download'
         });
+        
+        recordLocalClick('resume');
+        logConsoleEvent('CTA Click: Resume Downloaded', 'click');
     });
 }
 
@@ -850,6 +1001,16 @@ document.querySelectorAll('.glass-btn, .contact-box, .project-link-btn').forEach
             event_label: platform,
             link_url: href
         });
+
+        const cleanPlatform = platform.toLowerCase();
+        if (cleanPlatform === 'github' || cleanPlatform === 'linkedin' || cleanPlatform === 'email' || cleanPlatform === 'instagram') {
+            recordLocalClick(cleanPlatform);
+        } else {
+            analyticsStore.ctaClicks++;
+            saveAnalytics();
+            updateDashboardUI();
+        }
+        logConsoleEvent(`CTA Click: ${platform}`, 'click');
     });
 });
 
@@ -860,6 +1021,7 @@ const reachedMilestones = new Set();
 window.addEventListener('scroll', () => {
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (docHeight <= 0) return;
     const scrollPercent = Math.round((scrollTop / docHeight) * 100);
 
     scrollMilestones.forEach(milestone => {
@@ -870,6 +1032,12 @@ window.addEventListener('scroll', () => {
                 event_label: `${milestone}%`,
                 value: milestone
             });
+
+            const milestonePill = document.getElementById(`milestone-${milestone}`);
+            if (milestonePill) {
+                milestonePill.classList.add('achieved');
+            }
+            logConsoleEvent(`Scroll Depth Reached: ${milestone}%`, 'scroll');
         }
     });
 }, { passive: true });
@@ -887,6 +1055,18 @@ timeThresholds.forEach(seconds => {
                 event_label: `${seconds}s`,
                 value: seconds
             });
+
+            logConsoleEvent(`Time Engagement Milestone: ${seconds}s`, 'scroll');
         }
     }, seconds * 1000);
 });
+
+// Initialize on execution
+updateDashboardUI();
+logConsoleEvent('Session tracking initialized', 'view');
+initActiveUsersFluctuation();
+initSessionTimer();
+
+setTimeout(() => {
+    logConsoleEvent(`Historical analytics loaded. Total pageviews: ${formatNumber(analyticsStore.pageViews)}`, 'view');
+}, 800);

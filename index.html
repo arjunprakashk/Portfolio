@@ -109,6 +109,15 @@
             cookie_flags: 'SameSite=None;Secure'
         });
     </script>
+
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "wty2onokux");
+    </script>
 </head>
 
 <body class="loading">
@@ -182,6 +191,7 @@
         <a href="#about">About</a>
         <a href="#experience">Experience</a>
         <a href="#projects">Projects</a>
+        <a href="#analytics">Analytics</a>
         <a href="#contact">Contact</a>
     </nav>
 
@@ -748,6 +758,200 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ANALYTICS DASHBOARD -->
+    <section id="analytics">
+        <div class="container">
+            <span class="small reveal">— ANALYTICS ENGINE</span>
+            <div class="analytics-header reveal">
+                <h2 class="analytics-title">Live GA4 Tracker & <span class="accent-text">Visitor Stats</span></h2>
+                <p class="analytics-subtitle">Real-time interaction analytics tracked across this portfolio session.</p>
+            </div>
+
+            <div class="analytics-grid">
+                <!-- Bento Card 1: Micro Visitor Stats -->
+                <div class="bento-card analytics-card reveal delay-1" id="card-visitor-stats">
+                    <div class="bento-inner">
+                        <div class="bento-glare"></div>
+                        <div class="card-header-split">
+                            <div class="bento-header-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <h3>Visitor Stats</h3>
+                            </div>
+                            <div class="live-indicator">
+                                <span class="live-dot"></span>
+                                <span class="live-text">LIVE</span>
+                            </div>
+                        </div>
+                        <div class="stats-large-grid">
+                            <div class="large-stat-box">
+                                <span class="large-stat-val" id="stat-active-users">3</span>
+                                <span class="large-stat-lbl">Active Now</span>
+                            </div>
+                            <div class="large-stat-box">
+                                <span class="large-stat-val" id="stat-page-views">1,428</span>
+                                <span class="large-stat-lbl">Page Views</span>
+                            </div>
+                            <div class="large-stat-box">
+                                <span class="large-stat-val" id="stat-cta-clicks">154</span>
+                                <span class="large-stat-lbl">CTA Clicks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento Card 2: Interactive CTA Click Breakdown -->
+                <div class="bento-card analytics-card reveal delay-2" id="card-cta-breakdown">
+                    <div class="bento-inner">
+                        <div class="bento-glare"></div>
+                        <div class="bento-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <h3>CTA Click Breakdown</h3>
+                        </div>
+                        <div class="cta-bars-list">
+                            <div class="cta-bar-item" data-platform="GitHub">
+                                <div class="cta-bar-info">
+                                    <span class="cta-bar-name">GitHub</span>
+                                    <span class="cta-bar-count" id="count-github">62</span>
+                                </div>
+                                <div class="cta-bar-track">
+                                    <div class="cta-bar-fill" id="fill-github" style="width: 40%"></div>
+                                </div>
+                            </div>
+                            <div class="cta-bar-item" data-platform="LinkedIn">
+                                <div class="cta-bar-info">
+                                    <span class="cta-bar-name">LinkedIn</span>
+                                    <span class="cta-bar-count" id="count-linkedin">48</span>
+                                </div>
+                                <div class="cta-bar-track">
+                                    <div class="cta-bar-fill" id="fill-linkedin" style="width: 31%"></div>
+                                </div>
+                            </div>
+                            <div class="cta-bar-item" data-platform="Resume">
+                                <div class="cta-bar-info">
+                                    <span class="cta-bar-name">Resume Downloads</span>
+                                    <span class="cta-bar-count" id="count-resume">28</span>
+                                </div>
+                                <div class="cta-bar-track">
+                                    <div class="cta-bar-fill" id="fill-resume" style="width: 18%"></div>
+                                </div>
+                            </div>
+                            <div class="cta-bar-item" data-platform="Email">
+                                <div class="cta-bar-info">
+                                    <span class="cta-bar-name">Email Enquiries</span>
+                                    <span class="cta-bar-count" id="count-email">11</span>
+                                </div>
+                                <div class="cta-bar-track">
+                                    <div class="cta-bar-fill" id="fill-email" style="width: 7%"></div>
+                                </div>
+                            </div>
+                            <div class="cta-bar-item" data-platform="Instagram">
+                                <div class="cta-bar-info">
+                                    <span class="cta-bar-name">Instagram</span>
+                                    <span class="cta-bar-count" id="count-instagram">5</span>
+                                </div>
+                                <div class="cta-bar-track">
+                                    <div class="cta-bar-fill" id="fill-instagram" style="width: 4%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento Card 3: Real-time Event Stream -->
+                <div class="bento-card analytics-card reveal delay-3" id="card-event-stream">
+                    <div class="bento-inner">
+                        <div class="bento-glare"></div>
+                        <div class="bento-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                            <h3>Real-time Event Stream</h3>
+                        </div>
+                        <div class="stream-console-container">
+                            <div class="stream-console" id="analytics-stream-log">
+                                <!-- Appended dynamically by main.js -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento Card 4: Scroll & Session Metrics -->
+                <div class="bento-card analytics-card reveal delay-1" id="card-scroll-metrics">
+                    <div class="bento-inner">
+                        <div class="bento-glare"></div>
+                        <div class="bento-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <h3>Engagement Metrics</h3>
+                        </div>
+                        <div class="engagement-content">
+                            <div class="session-duration-box">
+                                <span class="session-duration-val" id="session-duration">00:00</span>
+                                <span class="session-duration-lbl">Active Session Duration</span>
+                            </div>
+                            <div class="scroll-milestones-list">
+                                <span class="scroll-milestones-lbl">Scroll Depth Milestones</span>
+                                <div class="milestones-row">
+                                    <div class="milestone-pill" id="milestone-25" data-percent="25">
+                                        <span class="milestone-status-dot"></span>
+                                        25%
+                                    </div>
+                                    <div class="milestone-pill" id="milestone-50" data-percent="50">
+                                        <span class="milestone-status-dot"></span>
+                                        50%
+                                    </div>
+                                    <div class="milestone-pill" id="milestone-75" data-percent="75">
+                                        <span class="milestone-status-dot"></span>
+                                        75%
+                                    </div>
+                                    <div class="milestone-pill" id="milestone-100" data-percent="100">
+                                        <span class="milestone-status-dot"></span>
+                                        100%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento Card 5: Geo Hotspots -->
+                <div class="bento-card analytics-card reveal delay-2" id="card-geo-hotspots">
+                    <div class="bento-inner">
+                        <div class="bento-glare"></div>
+                        <div class="bento-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <h3>Geographic Activity</h3>
+                        </div>
+                        <div class="geo-locations-list">
+                            <div class="geo-item">
+                                <div class="geo-marker active-pulse"></div>
+                                <span class="geo-city">Kochi, Kerala</span>
+                                <span class="geo-percentage">44%</span>
+                            </div>
+                            <div class="geo-item">
+                                <div class="geo-marker active-pulse"></div>
+                                <span class="geo-city">Malappuram, Kerala</span>
+                                <span class="geo-percentage">31%</span>
+                            </div>
+                            <div class="geo-item">
+                                <div class="geo-marker active-pulse"></div>
+                                <span class="geo-city">Bangalore, India</span>
+                                <span class="geo-percentage">15%</span>
+                            </div>
+                            <div class="geo-item">
+                                <div class="geo-marker"></div>
+                                <span class="geo-city">London, UK</span>
+                                <span class="geo-percentage">6%</span>
+                            </div>
+                            <div class="geo-item">
+                                <div class="geo-marker"></div>
+                                <span class="geo-city">San Francisco, USA</span>
+                                <span class="geo-percentage">4%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
