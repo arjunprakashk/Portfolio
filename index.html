@@ -122,6 +122,10 @@
 
 <body class="loading">
 
+    <!-- CUSTOM CURSOR -->
+    <div id="cursor-dot" aria-hidden="true"></div>
+    <div id="cursor-ring" aria-hidden="true"></div>
+
     <!-- PRELOADER -->
     <div id="preloader">
         <div class="preloader-content">
@@ -242,6 +246,10 @@
             </div>
 
         </div>
+        <div class="scroll-cue" aria-hidden="true">
+            <span>Scroll</span>
+            <div class="scroll-cue-line"></div>
+        </div>
     </section>
 
     <!-- PROFILE SUMMARY -->
@@ -277,6 +285,22 @@
                     and responsive UI design. I am highly motivated to learn new technologies,
                     collaborate in Agile teams, and continuously improve performance and code quality.
                 </p>
+
+                <!-- Stats Bar -->
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-countup="10">0</span><span class="stat-plus">+</span>
+                        <span class="stat-label">Projects</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-countup="6">0</span><span class="stat-plus">+</span>
+                        <span class="stat-label">Months Exp</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-countup="15">0</span><span class="stat-plus">+</span>
+                        <span class="stat-label">Tech Stack</span>
+                    </div>
+                </div>
 
                 <a href="/files/ArjunK_Python.pdf" class="cv-btn" download="Arjun_K_Resume.pdf" type="application/pdf">
                     Download CV
@@ -316,6 +340,9 @@
                             <span class="skill-pill">PHP</span>
                             <span class="skill-pill">SQL</span>
                         </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="90"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -335,6 +362,9 @@
                             <span class="skill-pill">CSS3</span>
                             <span class="skill-pill">Tailwind CSS</span>
                             <span class="skill-pill">Bootstrap</span>
+                        </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="85"></div>
                         </div>
                     </div>
                 </div>
@@ -356,6 +386,9 @@
                             <span class="skill-pill">API Integration</span>
                             <span class="skill-pill">Django ORM</span>
                         </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="88"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -373,6 +406,9 @@
                             <span class="skill-pill">SQLite</span>
                             <span class="skill-pill">ORM</span>
                             <span class="skill-pill">Frappe</span>
+                        </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="82"></div>
                         </div>
                     </div>
                 </div>
@@ -394,6 +430,9 @@
                             <span class="skill-pill">Object-Oriented Programming</span>
                             <span class="skill-pill">Software Engineering</span>
                         </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="80"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -413,6 +452,9 @@
                             <span class="skill-pill">API Testing</span>
                             <span class="skill-pill">SDLC</span>
                             <span class="skill-pill">Agile</span>
+                        </div>
+                        <div class="skill-proficiency-track">
+                            <div class="skill-proficiency-bar" data-percent="85"></div>
                         </div>
                     </div>
                 </div>
@@ -1073,6 +1115,38 @@
                         </svg>
                     </div>
                 </a>
+            </div>
+
+            <div class="contact-form-wrapper reveal">
+                <h3 class="form-heading">Or send me a message directly</h3>
+                <form id="contactForm" class="glass-contact-form" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cf-name">Name</label>
+                            <input type="text" id="cf-name" name="from_name" 
+                                   placeholder="Your name" required autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="cf-email">Email</label>
+                            <input type="email" id="cf-email" name="reply_to" 
+                                   placeholder="hello@example.com" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cf-message">Message</label>
+                        <textarea id="cf-message" name="message" rows="5" 
+                                  placeholder="Tell me about your project or opportunity..." required></textarea>
+                    </div>
+                    <button type="submit" id="formSubmitBtn" class="form-submit-btn">
+                        <span class="btn-text">Send Message</span>
+                        <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" 
+                             fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                    <p id="formFeedback" class="form-feedback" aria-live="polite"></p>
+                </form>
             </div>
 
             <p class="contact-location reveal">

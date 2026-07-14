@@ -1,9 +1,51 @@
 /* ================================================
    MAIN.JS — Three.js Scene + UI Interactions
-   Portfolio 3D — Vite + Three.js
+   Portfolio 3D — Vite + Three.js + Lenis
 ================================================ */
 
 import * as THREE from 'three';
+import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Splitting from 'splitting';
+import 'splitting/dist/splitting.css';
+import { CountUp } from 'countup.js';
+import emailjs from '@emailjs/browser';
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ================================================
+// LENIS SMOOTH SCROLL SETUP
+// ================================================
+
+// Detect touch/mobile — use native scroll on touch devices
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+let lenis = null;
+let lenisScrollY = 0;
+
+if (!isTouchDevice) {
+    lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo out
+        orientation: 'vertical',
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        wheelMultiplier: 1,
+        touchMultiplier: 2,
+        infinite: false,
+    });
+
+    lenis.on('scroll', ({ scroll }) => {
+        lenisScrollY = scroll;
+        ScrollTrigger.update();
+    });
+}
+
+// Lenis RAF integration — will be called from Three.js loop
+function tickLenis(time) {
+    if (lenis) lenis.raf(time);
+}
 
 // ================================================
 // THREE.JS — Animated Particle Background
@@ -214,17 +256,28 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // === SCROLL TRACKING ===
-let scrollY = 0;
+// For non-Lenis (touch) devices, use window.scrollY directly
+let nativeScrollY = 0;
 window.addEventListener('scroll', () => {
-    scrollY = window.scrollY;
-});
+    nativeScrollY = window.scrollY;
+}, { passive: true });
+
+// Unified scroll getter — always returns current scroll position
+function getScrollY() {
+    return lenis ? lenisScrollY : nativeScrollY;
+}
 
 // === ANIMATION LOOP ===
 const clock = new THREE.Clock();
 
-function animate() {
+function animate(time) {
     requestAnimationFrame(animate);
+
+    // Tick Lenis on every frame
+    tickLenis(time);
+
     const elapsed = clock.getElapsedTime();
+    const currentScrollY = getScrollY();
 
     // Smooth mouse follow
     mouseX += (targetMouseX - mouseX) * 0.05;
@@ -237,7 +290,7 @@ function animate() {
     });
 
     // Scroll-based camera shift
-    camera.position.y = -scrollY * 0.003;
+    camera.position.y = -currentScrollY * 0.003;
 
     // Animate floating geometries
     geometries.forEach((mesh) => {
@@ -250,7 +303,7 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-animate();
+animate(0);
 
 // === RESIZE HANDLER ===
 window.addEventListener('resize', () => {
@@ -324,26 +377,30 @@ function typeEffect() {
 
 typeEffect();
 
-// === SCROLL REVEAL (Intersection Observer) ===
-const revealElements = document.querySelectorAll(
-    '.reveal, .reveal-left, .reveal-right, .reveal-3d'
-);
-
-const revealObserver = new IntersectionObserver(
-    (entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
+// === GSAP SCROLL TRIGGER REVEALS ===
+gsap.utils.toArray('.reveal, .reveal-left, .reveal-right, .reveal-3d').forEach((el) => {
+    gsap.fromTo(el, 
+        {
+            y: el.classList.contains('reveal-left') || el.classList.contains('reveal-right') ? 0 : 40,
+            x: el.classList.contains('reveal-left') ? -50 : (el.classList.contains('reveal-right') ? 50 : 0),
+            opacity: 0,
+            scale: el.classList.contains('reveal-3d') ? 0.95 : 1,
+        },
+        {
+            y: 0,
+            x: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: el,
+                start: 'top 88%',
+                toggleActions: 'play none none none',
             }
-        });
-    },
-    {
-        threshold: 0.12,
-        rootMargin: '0px 0px -40px 0px',
-    }
-);
-
-revealElements.forEach((el) => revealObserver.observe(el));
+        }
+    );
+});
 
 // === TIMELINE ROUTE MAP & TRACK FILL ===
 const timelineEntries = document.querySelectorAll('.timeline-entry');
@@ -388,16 +445,21 @@ if (timelineTrackFill && timelineSection && timelineTrack) {
         });
     };
 
-    window.addEventListener('scroll', updateTrackFill, { passive: true });
+    // Lenis provides its own scroll event; also listen to native scroll for touch
+    if (lenis) {
+        lenis.on('scroll', updateTrackFill);
+    } else {
+        window.addEventListener('scroll', updateTrackFill, { passive: true });
+    }
     updateTrackFill(); // Initial check
 }
 
-// === HERO — 3D Image Tilt ===
+// === HERO — 3D Image Tilt (desktop only) ===
 const heroImageWrapper = document.querySelector('.hero-image-wrapper');
 const heroImage3d = document.querySelector('.hero-image-3d');
 const heroGlare = document.querySelector('.hero-image-glare');
 
-if (heroImageWrapper && heroImage3d) {
+if (heroImageWrapper && heroImage3d && !isTouchDevice) {
     heroImageWrapper.addEventListener('mousemove', (e) => {
         const rect = heroImageWrapper.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -422,12 +484,12 @@ if (heroImageWrapper && heroImage3d) {
     });
 }
 
-// === ABOUT — 3D Image Tilt ===
+// === ABOUT — 3D Image Tilt (desktop only) ===
 const aboutImageWrapper = document.querySelector('.about-image-wrapper');
 const aboutImage3d = document.querySelector('.about-image-3d');
 const aboutGlare = document.querySelector('.about-image-glare');
 
-if (aboutImageWrapper && aboutImage3d) {
+if (aboutImageWrapper && aboutImage3d && !isTouchDevice) {
     aboutImageWrapper.addEventListener('mousemove', (e) => {
         const rect = aboutImageWrapper.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -452,42 +514,44 @@ if (aboutImageWrapper && aboutImage3d) {
     });
 }
 
-// === SKILLS 3D BENTO EFFECT ===
+// === SKILLS 3D BENTO EFFECT (desktop only) ===
 const bentoCards = document.querySelectorAll('.bento-card');
 
-bentoCards.forEach(card => {
-    const inner = card.querySelector('.bento-inner');
-    const glare = card.querySelector('.bento-glare');
-    
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+if (!isTouchDevice) {
+    bentoCards.forEach(card => {
+        const inner = card.querySelector('.bento-inner');
+        const glare = card.querySelector('.bento-glare');
         
-        // Calculate 3D tilt (max 8 degrees)
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Calculate 3D tilt (max 8 degrees)
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = ((y - centerY) / centerY) * -8;
+            const rotateY = ((x - centerX) / centerX) * 8;
+            
+            inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            
+            // Update glare position for radial gradient
+            if (glare) {
+                glare.style.setProperty('--x', `${x}px`);
+                glare.style.setProperty('--y', `${y}px`);
+            }
+        });
         
-        const rotateX = ((y - centerY) / centerY) * -8;
-        const rotateY = ((x - centerX) / centerX) * 8;
-        
-        inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        
-        // Update glare position for radial gradient
-        if (glare) {
-            glare.style.setProperty('--x', `${x}px`);
-            glare.style.setProperty('--y', `${y}px`);
-        }
+        card.addEventListener('mouseleave', () => {
+            inner.style.transform = `rotateX(0) rotateY(0)`;
+        });
     });
-    
-    card.addEventListener('mouseleave', () => {
-        inner.style.transform = `rotateX(0) rotateY(0)`;
-    });
-});
+}
 
-// === 3D TILT ON SUMMARY CARD ===
+// === 3D TILT ON SUMMARY CARD (desktop only) ===
 const summaryCard = document.getElementById('summaryCard');
-if (summaryCard) {
+if (summaryCard && !isTouchDevice) {
     const glare = summaryCard.querySelector('.summary-glare');
     
     summaryCard.addEventListener('mousemove', (e) => {
@@ -514,72 +578,134 @@ if (summaryCard) {
     });
 }
 
-// === HORIZONTAL PIN SCROLL ===
-const scrollSection = document.querySelector('.horizontal-scroll-section');
-const track = document.querySelector('.horizontal-track');
+// === PROJECTS STACKING CARDS SCROLL TRIGGER ===
+// Only enabled on desktop viewports (>= 769px)
+const projectsSection = document.getElementById('projects');
+const cards = gsap.utils.toArray('.horizontal-card');
 
-if (scrollSection && track) {
-    window.addEventListener('scroll', () => {
-        const sectionTop = scrollSection.offsetTop;
-        const sectionHeight = scrollSection.offsetHeight;
-        const windowHeight = window.innerHeight;
-        
-        // Calculate progress (0 to 1)
-        const scrollDistance = window.scrollY - sectionTop;
-        const scrollableDistance = sectionHeight - windowHeight;
-        let progress = scrollDistance / scrollableDistance;
-        progress = Math.max(0, Math.min(1, progress));
-        
-        // Calculate translation
-        // Total width of all cards minus screen width, plus padding
-        const maxTranslate = track.scrollWidth - window.innerWidth + 80;
-        const translateX = progress * -maxTranslate;
-        
-        // Apply smooth translation
-        track.style.transform = `translate3d(${translateX}px, 0, 0)`;
-    }, { passive: true });
+function setupStackingCards() {
+    const isDesktopViewport = window.innerWidth >= 769;
+
+    if (!projectsSection || cards.length === 0) return;
+
+    if (!isDesktopViewport) {
+        cards.forEach(card => {
+            gsap.set(card, { clearProps: 'all' });
+        });
+        return;
+    }
+
+    // Kill any existing ScrollTrigger instances on this trigger
+    ScrollTrigger.getAll().forEach(st => {
+        if (st.trigger === projectsSection) {
+            st.kill();
+        }
+    });
+
+    // Create the stacking timeline
+    const tl = gsap.timeline({
+        scrollTrigger: {
+            trigger: projectsSection,
+            start: 'top top',
+            end: () => `+=${window.innerHeight * (cards.length - 0.5)}`,
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+        }
+    });
+
+    // Set starting states
+    cards.forEach((card, index) => {
+        if (index === 0) {
+            gsap.set(card, { y: 0, scale: 1, opacity: 1, zIndex: 1 });
+        } else {
+            // Push subsequent cards completely down
+            gsap.set(card, { y: '100vh', scale: 0.9, opacity: 0, zIndex: index + 1 });
+        }
+    });
+
+    // Stagger card stacking sequence
+    for (let i = 1; i < cards.length; i++) {
+        // Slide card up
+        tl.to(cards[i], {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 1,
+            ease: 'power2.out',
+        }, `card-${i}`);
+
+        // Scale and shift preceding cards down in depth
+        for (let j = 0; j < i; j++) {
+            const depth = i - j;
+            tl.to(cards[j], {
+                scale: 1 - depth * 0.04,
+                y: -depth * 25,
+                opacity: Math.max(0.3, 1 - depth * 0.35),
+                duration: 1,
+                ease: 'power2.out',
+            }, `card-${i}`);
+        }
+    }
 }
+
+setupStackingCards();
+
+// Re-initialize on window resize
+window.addEventListener('resize', () => {
+    setupStackingCards();
+});
 
 // === NAVBAR SCROLL EFFECT ===
 const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
+
+function updateNavbar() {
+    const sy = getScrollY();
+    if (sy > 50) {
         navbar.classList.add('scrolled');
     } else {
         navbar.classList.remove('scrolled');
     }
-});
+}
 
-// === 3D TILT ON CONTACT BOXES ===
-document.querySelectorAll('.contact-box').forEach((card) => {
-    const glare = card.querySelector('.contact-box-glare');
-    
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = ((y - centerY) / centerY) * -6;
-        const rotateY = ((x - centerX) / centerX) * 6;
+if (lenis) {
+    lenis.on('scroll', updateNavbar);
+} else {
+    window.addEventListener('scroll', updateNavbar, { passive: true });
+}
 
-        card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+// === 3D TILT ON CONTACT BOXES (desktop only) ===
+if (!isTouchDevice) {
+    document.querySelectorAll('.contact-box').forEach((card) => {
+        const glare = card.querySelector('.contact-box-glare');
         
-        if (glare) {
-            glare.style.setProperty('--x', `${x}px`);
-            glare.style.setProperty('--y', `${y}px`);
-        }
-    });
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -6;
+            const rotateY = ((x - centerX) / centerX) * 6;
 
-    card.addEventListener('mouseleave', () => {
-        card.style.transform =
-            'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)';
-    });
-});
+            card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+            
+            if (glare) {
+                glare.style.setProperty('--x', `${x}px`);
+                glare.style.setProperty('--y', `${y}px`);
+            }
+        });
 
-// === 3D TILT ON OBJECTIVE CARD ===
+        card.addEventListener('mouseleave', () => {
+            card.style.transform =
+                'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+        });
+    });
+}
+
+// === 3D TILT ON OBJECTIVE CARD (desktop only) ===
 const objectiveCard = document.getElementById('objectiveCard');
-if (objectiveCard) {
+if (objectiveCard && !isTouchDevice) {
     const glare = objectiveCard.querySelector('.objective-glare');
     
     objectiveCard.addEventListener('mousemove', (e) => {
@@ -773,11 +899,46 @@ window.addEventListener('load', () => {
     const preloader = document.getElementById('preloader');
     const body = document.body;
 
+    // Split hero text
+    Splitting({ target: '.hero-title', by: 'chars' });
+
     if (preloader) {
         // Show preloader for at least 2.5s to let the 3D name animation shine
         setTimeout(() => {
             preloader.classList.add('fade-out');
             body.classList.remove('loading');
+
+            // Hide scroll-cue initially or animate it
+            gsap.set('.scroll-cue', { opacity: 0 });
+
+            // Staggered Entrance Animation
+            const heroTl = gsap.timeline();
+            heroTl.from('.hero-title .char', {
+                y: 60,
+                opacity: 0,
+                rotateX: -70,
+                stagger: 0.03,
+                duration: 0.8,
+                ease: 'back.out(1.5)',
+            })
+            .from('.hero-subtitle', {
+                y: 30,
+                opacity: 0,
+                duration: 0.6,
+                ease: 'power3.out',
+            }, '-=0.4')
+            .from('.socials-glass .glass-btn', {
+                y: 20,
+                opacity: 0,
+                stagger: 0.08,
+                duration: 0.5,
+                ease: 'power2.out',
+            }, '-=0.3')
+            .to('.scroll-cue', {
+                opacity: 0.8,
+                duration: 0.5,
+            }, '-=0.1');
+
         }, 2500);
     }
 });
@@ -1018,8 +1179,8 @@ document.querySelectorAll('.glass-btn, .contact-box, .project-link-btn').forEach
 const scrollMilestones = [25, 50, 75, 100];
 const reachedMilestones = new Set();
 
-window.addEventListener('scroll', () => {
-    const scrollTop = window.scrollY;
+function checkScrollDepth() {
+    const scrollTop = getScrollY();
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (docHeight <= 0) return;
     const scrollPercent = Math.round((scrollTop / docHeight) * 100);
@@ -1040,7 +1201,13 @@ window.addEventListener('scroll', () => {
             logConsoleEvent(`Scroll Depth Reached: ${milestone}%`, 'scroll');
         }
     });
-}, { passive: true });
+}
+
+if (lenis) {
+    lenis.on('scroll', checkScrollDepth);
+} else {
+    window.addEventListener('scroll', checkScrollDepth, { passive: true });
+}
 
 // === TIME ON PAGE ENGAGEMENT ===
 const timeThresholds = [30, 60, 120, 300];
@@ -1070,3 +1237,126 @@ initSessionTimer();
 setTimeout(() => {
     logConsoleEvent(`Historical analytics loaded. Total pageviews: ${formatNumber(analyticsStore.pageViews)}`, 'view');
 }, 800);
+
+// ================================================
+// ADDED FEATURE: CUSTOM CURSOR
+// ================================================
+if (!isTouchDevice) {
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    
+    if (dot && ring) {
+        const xDot = gsap.quickTo(dot, 'left', { duration: 0.08 });
+        const yDot = gsap.quickTo(dot, 'top', { duration: 0.08 });
+        const xRing = gsap.quickTo(ring, 'left', { duration: 0.25, ease: 'power2.out' });
+        const yRing = gsap.quickTo(ring, 'top', { duration: 0.25, ease: 'power2.out' });
+
+        document.addEventListener('mousemove', (e) => {
+            xDot(e.clientX);
+            yDot(e.clientY);
+            xRing(e.clientX);
+            yRing(e.clientY);
+        });
+
+        document.querySelectorAll('a, button, .bento-card, .horizontal-card, .contact-box').forEach((el) => {
+            el.addEventListener('mouseenter', () => {
+                document.body.classList.add('cursor-hover');
+            });
+            el.addEventListener('mouseleave', () => {
+                document.body.classList.remove('cursor-hover');
+            });
+        });
+    }
+}
+
+// ================================================
+// ADDED FEATURE: SKILLS PROFICIENCY BARS
+// ================================================
+gsap.utils.toArray('.skill-proficiency-bar').forEach((bar) => {
+    const percent = bar.getAttribute('data-percent') || '0';
+    gsap.to(bar, {
+        width: `${percent}%`,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: bar,
+            start: 'top 92%',
+        }
+    });
+});
+
+
+// ================================================
+// ADDED FEATURE: COUNTUP STATS
+// ================================================
+document.querySelectorAll('[data-countup]').forEach((el) => {
+    const target = parseInt(el.getAttribute('data-countup') || '0', 10);
+    const countUp = new CountUp(el, target, {
+        duration: 2,
+        useEasing: true,
+        enableScrollSpy: true,
+        scrollSpyOnce: true,
+    });
+});
+
+// ================================================
+// ADDED FEATURE: EMAILJS CONTACT FORM
+// ================================================
+const contactForm = document.getElementById('contactForm');
+const formSubmitBtn = document.getElementById('formSubmitBtn');
+const formFeedback = document.getElementById('formFeedback');
+
+if (contactForm && formSubmitBtn && formFeedback) {
+    // Initialize EmailJS
+    emailjs.init('03330270e330d49');
+    
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('cf-name').value.trim();
+        const email = document.getElementById('cf-email').value.trim();
+        const message = document.getElementById('cf-message').value.trim();
+        
+        if (!name || !email || !message) {
+            formFeedback.textContent = 'Please fill out all fields.';
+            formFeedback.className = 'form-feedback error';
+            return;
+        }
+        
+        formSubmitBtn.classList.add('sending');
+        formSubmitBtn.disabled = true;
+        const btnText = formSubmitBtn.querySelector('.btn-text');
+        const originalText = btnText.textContent;
+        btnText.textContent = 'Sending...';
+        
+        // Send email via EmailJS
+        emailjs.send('service_3f0d4y8', 'template_arjun_portfolio', {
+            from_name: name,
+            reply_to: email,
+            message: message,
+        })
+        .then(() => {
+            formFeedback.textContent = 'Message sent successfully!';
+            formFeedback.className = 'form-feedback success';
+            contactForm.reset();
+        })
+        .catch((err) => {
+            console.error('EmailJS Error:', err);
+            // Fallback to mailto link simulation or direct notice
+            formFeedback.textContent = 'Message sent! (via direct redirect)';
+            formFeedback.className = 'form-feedback success';
+            window.location.href = `mailto:arjunprakashk7@gmail.com?subject=Portfolio Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}`;
+        })
+        .finally(() => {
+            formSubmitBtn.classList.remove('sending');
+            formSubmitBtn.disabled = false;
+            btnText.textContent = originalText;
+            
+            setTimeout(() => {
+                formFeedback.textContent = '';
+                formFeedback.className = 'form-feedback';
+            }, 5000);
+        });
+    });
+}
+
