@@ -461,6 +461,7 @@ const heroGlare = document.querySelector('.hero-image-glare');
 
 if (heroImageWrapper && heroImage3d && !isTouchDevice) {
     heroImageWrapper.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 769) return;
         const rect = heroImageWrapper.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -491,6 +492,7 @@ const aboutGlare = document.querySelector('.about-image-glare');
 
 if (aboutImageWrapper && aboutImage3d && !isTouchDevice) {
     aboutImageWrapper.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 769) return;
         const rect = aboutImageWrapper.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -523,6 +525,7 @@ if (!isTouchDevice) {
         const glare = card.querySelector('.bento-glare');
         
         card.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 769) return;
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -555,6 +558,7 @@ if (summaryCard && !isTouchDevice) {
     const glare = summaryCard.querySelector('.summary-glare');
     
     summaryCard.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 769) return;
         const rect = summaryCard.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -584,23 +588,16 @@ const projectsSection = document.getElementById('projects');
 const cards = gsap.utils.toArray('.horizontal-card');
 
 function setupStackingCards() {
-    const isDesktopViewport = window.innerWidth >= 769;
-
     if (!projectsSection || cards.length === 0) return;
 
-    if (!isDesktopViewport) {
-        cards.forEach(card => {
-            gsap.set(card, { clearProps: 'all' });
-        });
-        return;
-    }
-
-    // Kill any existing ScrollTrigger instances on this trigger
+    // Kill and revert any existing ScrollTrigger instances on this trigger
     ScrollTrigger.getAll().forEach(st => {
         if (st.trigger === projectsSection) {
-            st.kill();
+            st.kill(true);
         }
     });
+
+    const isMobile = window.innerWidth < 769;
 
     // Create the stacking timeline
     const tl = gsap.timeline({
@@ -620,7 +617,7 @@ function setupStackingCards() {
             gsap.set(card, { y: 0, scale: 1, opacity: 1, zIndex: 1 });
         } else {
             // Push subsequent cards completely down
-            gsap.set(card, { y: '100vh', scale: 0.9, opacity: 0, zIndex: index + 1 });
+            gsap.set(card, { y: '100vh', scale: 0.95, opacity: 0, zIndex: index + 1 });
         }
     });
 
@@ -638,10 +635,19 @@ function setupStackingCards() {
         // Scale and shift preceding cards down in depth
         for (let j = 0; j < i; j++) {
             const depth = i - j;
+            const yShift = isMobile ? -depth * 16 : -depth * 25;
+            const scaleFactor = isMobile ? 1 - depth * 0.03 : 1 - depth * 0.04;
+            
+            // On mobile, fade out cards that are more than 1 layer deep to prevent overlapping text/content
+            let opacityVal = Math.max(0.3, 1 - depth * 0.35);
+            if (isMobile && depth > 1) {
+                opacityVal = 0;
+            }
+
             tl.to(cards[j], {
-                scale: 1 - depth * 0.04,
-                y: -depth * 25,
-                opacity: Math.max(0.3, 1 - depth * 0.35),
+                scale: scaleFactor,
+                y: yShift,
+                opacity: opacityVal,
                 duration: 1,
                 ease: 'power2.out',
             }, `card-${i}`);
@@ -651,9 +657,36 @@ function setupStackingCards() {
 
 setupStackingCards();
 
+function resetAllTilts() {
+    if (window.innerWidth < 769) {
+        const heroImg = document.querySelector('.hero-image-3d');
+        const aboutImg = document.querySelector('.about-image-3d');
+        const bCards = document.querySelectorAll('.bento-card');
+        const sCard = document.getElementById('summaryCard');
+        const oCard = document.getElementById('objectiveCard');
+
+        if (heroImg) heroImg.style.transform = '';
+        if (aboutImg) aboutImg.style.transform = '';
+        if (bCards) {
+            bCards.forEach(card => {
+                const inner = card.querySelector('.bento-inner');
+                if (inner) inner.style.transform = '';
+            });
+        }
+        if (sCard) sCard.style.transform = '';
+        document.querySelectorAll('.contact-box').forEach((card) => {
+            card.style.transform = '';
+        });
+        if (oCard) oCard.style.transform = '';
+    }
+}
+
+resetAllTilts();
+
 // Re-initialize on window resize
 window.addEventListener('resize', () => {
     setupStackingCards();
+    resetAllTilts();
 });
 
 // === NAVBAR SCROLL EFFECT ===
@@ -680,6 +713,7 @@ if (!isTouchDevice) {
         const glare = card.querySelector('.contact-box-glare');
         
         card.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 769) return;
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -709,6 +743,7 @@ if (objectiveCard && !isTouchDevice) {
     const glare = objectiveCard.querySelector('.objective-glare');
     
     objectiveCard.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 769) return;
         const rect = objectiveCard.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
