@@ -385,12 +385,14 @@ gsap.utils.toArray('.reveal, .reveal-left, .reveal-right, .reveal-3d').forEach((
             x: el.classList.contains('reveal-left') ? -50 : (el.classList.contains('reveal-right') ? 50 : 0),
             opacity: 0,
             scale: el.classList.contains('reveal-3d') ? 0.95 : 1,
+            rotationX: el.classList.contains('reveal-3d') ? -20 : 0,
         },
         {
             y: 0,
             x: 0,
             opacity: 1,
             scale: 1,
+            rotationX: 0,
             duration: 0.8,
             ease: 'power3.out',
             scrollTrigger: {
