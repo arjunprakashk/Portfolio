@@ -554,33 +554,28 @@ if (!isTouchDevice) {
     });
 }
 
-// === 3D TILT ON SUMMARY CARD (desktop only) ===
-const summaryCard = document.getElementById('summaryCard');
-if (summaryCard && !isTouchDevice) {
-    const glare = summaryCard.querySelector('.summary-glare');
-    
-    summaryCard.addEventListener('mousemove', (e) => {
-        if (window.innerWidth < 769) return;
-        const rect = summaryCard.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+// === 3D TILT ON PROJECT CARDS (desktop only) ===
+const projectCardInners = document.querySelectorAll('.horizontal-card-inner');
+if (!isTouchDevice) {
+    projectCardInners.forEach(cardInner => {
+        cardInner.parentElement.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 769) return;
+            const rect = cardInner.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = ((y - centerY) / centerY) * -6;
+            const rotateY = ((x - centerX) / centerX) * 6;
+            
+            cardInner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+        });
         
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const rotateX = ((y - centerY) / centerY) * -4;
-        const rotateY = ((x - centerX) / centerX) * 4;
-        
-        summaryCard.style.transform = `translateY(-10px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        
-        if (glare) {
-            glare.style.setProperty('--x', `${x}px`);
-            glare.style.setProperty('--y', `${y}px`);
-        }
-    });
-    
-    summaryCard.addEventListener('mouseleave', () => {
-        summaryCard.style.transform = `translateY(0) rotateX(0) rotateY(0)`;
+        cardInner.parentElement.addEventListener('mouseleave', () => {
+            cardInner.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(0)`;
+        });
     });
 }
 

@@ -1332,7 +1332,7 @@ section {
     position: relative;
     width: 100%;
     max-width: 800px;
-    height: 500px;
+    height: 610px;
 }
 
 /* Individual Cards */
@@ -1340,9 +1340,9 @@ section {
     grid-column: 1;
     grid-row: 1;
     width: 100%;
-    max-width: 680px;
-    height: 480px;
-    perspective: 1000px;
+    max-width: 760px;
+    height: 580px;
+    perspective: 1200px;
     will-change: transform, opacity;
 }
 
@@ -1352,84 +1352,147 @@ section {
     position: relative;
     display: flex;
     flex-direction: column;
-    background: rgba(12, 14, 26, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-lg);
+    background: linear-gradient(145deg, rgba(18, 20, 38, 0.98) 0%, rgba(10, 12, 24, 0.99) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
     overflow: hidden;
-    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 
+        0 20px 50px -10px rgba(0, 0, 0, 0.7),
+        0 0 1px 1px rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-style: preserve-3d;
+}
+
+.horizontal-card-inner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.8) 50%, transparent 100%);
+    opacity: 0.6;
+    transition: opacity 0.4s ease;
 }
 
 .horizontal-card-inner:hover {
-    border-color: rgba(0, 240, 255, 0.3);
+    border-color: rgba(0, 240, 255, 0.45);
     box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(0, 240, 255, 0.05);
+        0 25px 60px -10px rgba(0, 240, 255, 0.2),
+        0 0 30px rgba(0, 240, 255, 0.12),
+        0 0 1px 1px rgba(0, 240, 255, 0.35) inset;
 }
 
+/* 3D Browser Window Frame */
 .horizontal-image {
     width: 100%;
-    height: 45%;
+    height: 70%;
     position: relative;
     overflow: hidden;
-    border-bottom: 1px solid var(--border-glass);
-    background: rgba(12, 14, 26, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #090b14;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px 0 14px;
+    box-sizing: border-box;
+}
+
+/* Browser Dots Bar */
+.browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 6px;
+    z-index: 3;
+}
+
+.browser-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.browser-dot.red { background: #ff5f56; }
+.browser-dot.yellow { background: #ffbd2e; }
+.browser-dot.green { background: #27c93f; }
+
+.browser-url {
+    margin-left: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    padding: 1px 10px;
+    font-size: 10px;
+    color: var(--text-muted, #94a3b8);
+    font-family: monospace;
+}
+
+.image-viewport {
+    width: 100%;
+    flex: 1;
+    position: relative;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    overflow: hidden;
+    background: #090b14;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .horizontal-image img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    object-position: center;
+    object-fit: cover;
+    object-position: top left;
     display: block;
-    filter: brightness(0.9);
-    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
+    filter: brightness(0.98);
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.7s ease;
 }
 
 .horizontal-card-inner:hover .horizontal-image img {
-    transform: scale(1.08);
-    filter: brightness(1.1);
+    transform: scale(1.03);
+    filter: brightness(1.05);
 }
 
 /* Image Gradient Overlay */
 .project-image-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        180deg,
-        rgba(12, 14, 26, 0.1) 0%,
-        rgba(12, 14, 26, 0.8) 100%
-    );
-    pointer-events: none;
-    z-index: 1;
+    display: none;
 }
 
 /* Content Area */
 .horizontal-content {
-    padding: 24px 28px;
+    padding: 16px 28px;
     flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    z-index: 2;
 }
 
 .horizontal-content h3 {
+    font-family: var(--font-heading);
     font-size: 24px;
-    margin-bottom: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+    background: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .horizontal-content .project-desc {
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: auto; /* pushes tech pills and links to the bottom */
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: auto;
     color: var(--text-secondary);
 }
 
 .project-meta {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 8px;
 }
 
 .center-content {
@@ -3774,14 +3837,14 @@ body.theme-transitioning > *:not(.theme-transition-overlay):not(.theme-toggle):n
         position: relative;
         width: 100%;
         max-width: 480px;
-        height: 420px;
+        height: 540px;
     }
 
     .horizontal-card {
         grid-column: 1;
         grid-row: 1;
         width: 100%;
-        height: 400px;
+        height: 510px;
         perspective: 1000px;
         will-change: transform, opacity;
     }
@@ -3793,15 +3856,15 @@ body.theme-transitioning > *:not(.theme-transition-overlay):not(.theme-toggle):n
     }
 
     .horizontal-image {
-        height: 150px;
+        height: 250px;
     }
 
     .horizontal-content {
-        padding: 16px;
+        padding: 14px 16px;
     }
 
     .horizontal-content h3 {
-        font-size: 18px;
+        font-size: 20px;
     }
 
     .project-number {
@@ -4380,5 +4443,81 @@ body::after {
   .bubble-menu-items .pill-link:active {
     transform: scale(0.94);
   }
+}
+
+
+/* ================================================
+   LIGHT MODE OVERRIDES FOR RECENT SECTIONS
+================================================ */
+[data-theme="light"] .contact-form-wrapper {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .glass-contact-form input,
+[data-theme="light"] .glass-contact-form textarea {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #111;
+}
+
+[data-theme="light"] .glass-contact-form input:focus,
+[data-theme="light"] .glass-contact-form textarea:focus {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: #222;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .form-submit-btn {
+    color: #fff;
+}
+
+[data-theme="light"] .stream-console-container {
+    background: rgba(245, 245, 245, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .stream-console {
+    color: #059669; /* Darker green for visibility in light mode */
+}
+
+[data-theme="light"] .stream-console::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .horizontal-card-inner {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 244, 246, 0.98) 100%);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+}
+
+[data-theme="light"] .horizontal-card-inner:hover {
+    border-color: rgba(0, 200, 220, 0.5);
+    box-shadow: 0 25px 50px -10px rgba(0, 180, 210, 0.2), 0 0 20px rgba(0, 200, 220, 0.15);
+}
+
+[data-theme="light"] .horizontal-image {
+    background: radial-gradient(circle at center, #eef2f6 0%, #e2e8f0 100%);
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .horizontal-image img {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .project-image-overlay {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 65%, rgba(243, 244, 246, 0.85) 100%);
+}
+
+[data-theme="light"] .horizontal-content h3 {
+    color: #0f172a;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .horizontal-content .project-desc {
+    color: #475569;
 }
 
