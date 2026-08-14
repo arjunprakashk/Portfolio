@@ -130,11 +130,11 @@ particleSymbols.forEach((symbol, sIdx) => {
     const cols = new Float32Array(perSymbolCount * 3);
 
     for (let i = 0; i < perSymbolCount; i++) {
-        pos[i * 3]     = (Math.random() - 0.5) * 80;
+        pos[i * 3] = (Math.random() - 0.5) * 80;
         pos[i * 3 + 1] = (Math.random() - 0.5) * 80;
         pos[i * 3 + 2] = (Math.random() - 0.5) * 80;
 
-        cols[i * 3]     = color.r;
+        cols[i * 3] = color.r;
         cols[i * 3 + 1] = color.g;
         cols[i * 3 + 2] = color.b;
     }
@@ -379,7 +379,7 @@ typeEffect();
 
 // === GSAP SCROLL TRIGGER REVEALS ===
 gsap.utils.toArray('.reveal, .reveal-left, .reveal-right, .reveal-3d').forEach((el) => {
-    gsap.fromTo(el, 
+    gsap.fromTo(el,
         {
             y: el.classList.contains('reveal-left') || el.classList.contains('reveal-right') ? 0 : 40,
             x: el.classList.contains('reveal-left') ? -50 : (el.classList.contains('reveal-right') ? 50 : 0),
@@ -436,7 +436,7 @@ if (timelineTrackFill && timelineSection && timelineTrack) {
         timelineEntries.forEach(entry => {
             // The node dot is positioned 24px from the top of the entry relative to the timeline container
             const nodeOffsetTop = entry.offsetTop + 24;
-            
+
             // Add a small threshold (10px) so the line touches the dot before revealing
             if (currentLineBottom >= nodeOffsetTop - 10) {
                 entry.classList.add('timeline-visible');
@@ -525,29 +525,29 @@ if (!isTouchDevice) {
     bentoCards.forEach(card => {
         const inner = card.querySelector('.bento-inner');
         const glare = card.querySelector('.bento-glare');
-        
+
         card.addEventListener('mousemove', (e) => {
             if (window.innerWidth < 769) return;
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             // Calculate 3D tilt (max 8 degrees)
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            
+
             const rotateX = ((y - centerY) / centerY) * -8;
             const rotateY = ((x - centerX) / centerX) * 8;
-            
+
             inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            
+
             // Update glare position for radial gradient
             if (glare) {
                 glare.style.setProperty('--x', `${x}px`);
                 glare.style.setProperty('--y', `${y}px`);
             }
         });
-        
+
         card.addEventListener('mouseleave', () => {
             inner.style.transform = `rotateX(0) rotateY(0)`;
         });
@@ -563,16 +563,16 @@ if (!isTouchDevice) {
             const rect = cardInner.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            
+
             const rotateX = ((y - centerY) / centerY) * -6;
             const rotateY = ((x - centerX) / centerX) * 6;
-            
+
             cardInner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
         });
-        
+
         cardInner.parentElement.addEventListener('mouseleave', () => {
             cardInner.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(0)`;
         });
@@ -634,7 +634,7 @@ function setupStackingCards() {
             const depth = i - j;
             const yShift = isMobile ? -depth * 16 : -depth * 25;
             const scaleFactor = isMobile ? 1 - depth * 0.03 : 1 - depth * 0.04;
-            
+
             // On mobile, fade out cards that are more than 1 layer deep to prevent overlapping text/content
             let opacityVal = Math.max(0.3, 1 - depth * 0.35);
             if (isMobile && depth > 1) {
@@ -708,7 +708,7 @@ if (lenis) {
 if (!isTouchDevice) {
     document.querySelectorAll('.contact-box').forEach((card) => {
         const glare = card.querySelector('.contact-box-glare');
-        
+
         card.addEventListener('mousemove', (e) => {
             if (window.innerWidth < 769) return;
             const rect = card.getBoundingClientRect();
@@ -720,7 +720,7 @@ if (!isTouchDevice) {
             const rotateY = ((x - centerX) / centerX) * 6;
 
             card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
-            
+
             if (glare) {
                 glare.style.setProperty('--x', `${x}px`);
                 glare.style.setProperty('--y', `${y}px`);
@@ -738,27 +738,27 @@ if (!isTouchDevice) {
 const objectiveCard = document.getElementById('objectiveCard');
 if (objectiveCard && !isTouchDevice) {
     const glare = objectiveCard.querySelector('.objective-glare');
-    
+
     objectiveCard.addEventListener('mousemove', (e) => {
         if (window.innerWidth < 769) return;
         const rect = objectiveCard.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        
+
         const rotateX = ((y - centerY) / centerY) * -4;
         const rotateY = ((x - centerX) / centerX) * 4;
-        
+
         objectiveCard.style.transform = `translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        
+
         if (glare) {
             glare.style.setProperty('--x', `${x}px`);
             glare.style.setProperty('--y', `${y}px`);
         }
     });
-    
+
     objectiveCard.addEventListener('mouseleave', () => {
         objectiveCard.style.transform = `translateY(0) rotateX(0) rotateY(0)`;
     });
@@ -777,9 +777,12 @@ let isTransitioning = false;
 const lightGrey = new THREE.Color(0x333333);
 const lightDark = new THREE.Color(0x888888);
 
-// Restore saved theme preference
+// Restore saved theme preference (default: light)
 const savedTheme = localStorage.getItem('portfolio-theme');
-if (savedTheme === 'light') {
+if (savedTheme === 'dark') {
+    document.documentElement.removeAttribute('data-theme');
+    isLightTheme = false;
+} else {
     document.documentElement.setAttribute('data-theme', 'light');
     isLightTheme = true;
     // Immediately set particle colors to light theme
@@ -840,7 +843,7 @@ function animateParticleColors(fromA, fromB, toA, toB, duration) {
         for (let i = 0; i < count; i++) {
             const mix = gIdx / (allParticleGeometries.length - 1);
             const target = toA.clone().lerp(toB, mix);
-            t[i * 3]     = target.r;
+            t[i * 3] = target.r;
             t[i * 3 + 1] = target.g;
             t[i * 3 + 2] = target.b;
         }
@@ -887,7 +890,7 @@ function updateParticleColors(colorA, colorB) {
         const mix = gIdx / (allParticleGeometries.length - 1);
         const c = colorA.clone().lerp(colorB, mix);
         for (let i = 0; i < attr.count; i++) {
-            attr.array[i * 3]     = c.r;
+            attr.array[i * 3] = c.r;
             attr.array[i * 3 + 1] = c.g;
             attr.array[i * 3 + 2] = c.b;
         }
@@ -909,6 +912,7 @@ function updateParticleColors(colorA, colorB) {
 
 // === Update floating coding symbol colors ===
 function updateSymbolColors(colorA, colorB) {
+    if (typeof geometries === 'undefined' || !Array.isArray(geometries)) return;
     geometries.forEach((mesh, i) => {
         const t = i / (geometries.length - 1);
         const color = new THREE.Color().lerpColors(colorA, colorB, t);
@@ -953,23 +957,23 @@ window.addEventListener('load', () => {
                 duration: 0.8,
                 ease: 'back.out(1.5)',
             })
-            .from('.hero-subtitle', {
-                y: 30,
-                opacity: 0,
-                duration: 0.6,
-                ease: 'power3.out',
-            }, '-=0.4')
-            .from('.socials-glass .glass-btn', {
-                y: 20,
-                opacity: 0,
-                stagger: 0.08,
-                duration: 0.5,
-                ease: 'power2.out',
-            }, '-=0.3')
-            .to('.scroll-cue', {
-                opacity: 0.8,
-                duration: 0.5,
-            }, '-=0.1');
+                .from('.hero-subtitle', {
+                    y: 30,
+                    opacity: 0,
+                    duration: 0.6,
+                    ease: 'power3.out',
+                }, '-=0.4')
+                .from('.socials-glass .glass-btn', {
+                    y: 20,
+                    opacity: 0,
+                    stagger: 0.08,
+                    duration: 0.5,
+                    ease: 'power2.out',
+                }, '-=0.3')
+                .to('.scroll-cue', {
+                    opacity: 0.8,
+                    duration: 0.5,
+                }, '-=0.1');
 
         }, 2500);
     }
@@ -1037,7 +1041,7 @@ function formatNumber(num) {
 function updateDashboardUI() {
     const pvEl = document.getElementById('stat-page-views');
     const ctaEl = document.getElementById('stat-cta-clicks');
-    
+
     if (pvEl) pvEl.textContent = formatNumber(analyticsStore.pageViews);
     if (ctaEl) ctaEl.textContent = formatNumber(analyticsStore.ctaClicks);
 
@@ -1049,7 +1053,7 @@ function updateDashboardUI() {
         const countEl = document.getElementById(`count-${platform}`);
         const fillEl = document.getElementById(`fill-${platform}`);
         const count = analyticsStore[platform] || 0;
-        
+
         if (countEl) countEl.textContent = count;
         if (fillEl) {
             const percentage = maxClicks > 0 ? (count / maxClicks) * 100 : 0;
@@ -1065,19 +1069,19 @@ function logConsoleEvent(message, eventType = 'click') {
 
     const now = new Date();
     const timeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
-    
+
     const item = document.createElement('div');
     item.className = 'stream-item';
-    
+
     let typeClass = '';
     if (eventType === 'click') typeClass = 'click';
     else if (eventType === 'view') typeClass = 'view';
     else if (eventType === 'scroll') typeClass = 'scroll';
-    
+
     item.innerHTML = `<span class="stream-timestamp">[${timeStr}]</span> <span class="stream-action ${typeClass}">${message}</span>`;
-    
+
     consoleLogEl.appendChild(item);
-    
+
     // Auto-scroll to bottom
     consoleLogEl.scrollTop = consoleLogEl.scrollHeight;
 }
@@ -1094,7 +1098,7 @@ function initActiveUsersFluctuation() {
         const delta = Math.floor(Math.random() * 3) - 1;
         activeUsers = Math.max(1, Math.min(8, activeUsers + delta));
         activeUsersEl.textContent = activeUsers;
-        
+
         if (Math.random() > 0.75) {
             if (delta > 0) {
                 logConsoleEvent('New visitor session detected', 'view');
@@ -1111,12 +1115,12 @@ function initSessionTimer() {
     if (!durationEl) return;
 
     let seconds = 0;
-    
+
     setInterval(() => {
         seconds++;
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
-        
+
         const pad = (val) => val.toString().padStart(2, '0');
         durationEl.textContent = `${pad(mins)}:${pad(secs)}`;
     }, 1000);
@@ -1147,7 +1151,7 @@ const sectionObserver = new IntersectionObserver((entries) => {
                     section_name: sectionId,
                     event_category: 'engagement'
                 });
-                
+
                 logConsoleEvent(`Section viewed: #${sectionId.toUpperCase()}`, 'view');
             }
         }
@@ -1168,7 +1172,7 @@ if (cvBtn) {
             event_category: 'conversion',
             event_label: 'Resume Download'
         });
-        
+
         recordLocalClick('resume');
         logConsoleEvent('CTA Click: Resume Downloaded', 'click');
     });
@@ -1276,7 +1280,7 @@ setTimeout(() => {
 if (!isTouchDevice) {
     const dot = document.getElementById('cursor-dot');
     const ring = document.getElementById('cursor-ring');
-    
+
     if (dot && ring) {
         const xDot = gsap.quickTo(dot, 'left', { duration: 0.08 });
         const yDot = gsap.quickTo(dot, 'top', { duration: 0.08 });
@@ -1341,54 +1345,54 @@ const formFeedback = document.getElementById('formFeedback');
 if (contactForm && formSubmitBtn && formFeedback) {
     // Initialize EmailJS
     emailjs.init('03330270e330d49');
-    
+
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         const name = document.getElementById('cf-name').value.trim();
         const email = document.getElementById('cf-email').value.trim();
         const message = document.getElementById('cf-message').value.trim();
-        
+
         if (!name || !email || !message) {
             formFeedback.textContent = 'Please fill out all fields.';
             formFeedback.className = 'form-feedback error';
             return;
         }
-        
+
         formSubmitBtn.classList.add('sending');
         formSubmitBtn.disabled = true;
         const btnText = formSubmitBtn.querySelector('.btn-text');
         const originalText = btnText.textContent;
         btnText.textContent = 'Sending...';
-        
+
         // Send email via EmailJS
         emailjs.send('service_3f0d4y8', 'template_arjun_portfolio', {
             from_name: name,
             reply_to: email,
             message: message,
         })
-        .then(() => {
-            formFeedback.textContent = 'Message sent successfully!';
-            formFeedback.className = 'form-feedback success';
-            contactForm.reset();
-        })
-        .catch((err) => {
-            console.error('EmailJS Error:', err);
-            // Fallback to mailto link simulation or direct notice
-            formFeedback.textContent = 'Message sent! (via direct redirect)';
-            formFeedback.className = 'form-feedback success';
-            window.location.href = `mailto:arjunprakashk7@gmail.com?subject=Portfolio Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}`;
-        })
-        .finally(() => {
-            formSubmitBtn.classList.remove('sending');
-            formSubmitBtn.disabled = false;
-            btnText.textContent = originalText;
-            
-            setTimeout(() => {
-                formFeedback.textContent = '';
-                formFeedback.className = 'form-feedback';
-            }, 5000);
-        });
+            .then(() => {
+                formFeedback.textContent = 'Message sent successfully!';
+                formFeedback.className = 'form-feedback success';
+                contactForm.reset();
+            })
+            .catch((err) => {
+                console.error('EmailJS Error:', err);
+                // Fallback to mailto link simulation or direct notice
+                formFeedback.textContent = 'Message sent! (via direct redirect)';
+                formFeedback.className = 'form-feedback success';
+                window.location.href = `mailto:arjunprakashk7@gmail.com?subject=Portfolio Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}`;
+            })
+            .finally(() => {
+                formSubmitBtn.classList.remove('sending');
+                formSubmitBtn.disabled = false;
+                btnText.textContent = originalText;
+
+                setTimeout(() => {
+                    formFeedback.textContent = '';
+                    formFeedback.className = 'form-feedback';
+                }, 5000);
+            });
     });
 }
 
