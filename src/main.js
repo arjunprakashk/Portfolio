@@ -48,301 +48,340 @@ function tickLenis(time) {
 }
 
 // ================================================
-// THREE.JS — Animated Particle Background
+// 3D SCROLL IMAGE SEQUENCE ANIMATION
+// ezgif-73250375bd75d71b-png-split (240 PNG frames)
 // ================================================
 
 const canvas = document.getElementById('bg-canvas');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
-const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: true,
-});
+const ctx = canvas ? canvas.getContext('2d', { alpha: true }) : null;
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-camera.position.z = 30;
+const FRAME_COUNT = 240;
+const frames = [];
+let imagesLoadedCount = 0;
+let isFirstFrameRendered = false;
 
-// === CODING SYMBOL PARTICLES ===
-const isMobile = window.innerWidth < 768;
-const cyan = new THREE.Color(0x00f0ff);
-const purple = new THREE.Color(0x7b2ff7);
-
-// Symbols to scatter as particles
-const particleSymbols = [
-    'Py', 'JS', '⚛', 'CSS', 'SQL',
-    'git', 'npm', '{ }', '</>', '=>',
-    '//', '#'
-];
-
-// Create a tiny glow text canvas for a particle symbol
-function makeParticleTexture(symbol, colorHex) {
-    const size = 64;
-    const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
-    const ctx = c.getContext('2d');
-
-    ctx.clearRect(0, 0, size, size);
-
-    const fontSize = symbol.length <= 2 ? 28 : symbol.length <= 3 ? 22 : 18;
-    ctx.font = `700 ${fontSize}px 'Courier New', monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const r = (colorHex >> 16) & 255;
-    const g = (colorHex >> 8) & 255;
-    const b = colorHex & 255;
-
-    // Subtle glow
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.85)`;
-    ctx.fillText(symbol, size / 2, size / 2);
-
-    return c;
+// Format frame index to 3 digits (e.g. 1 -> "001", 42 -> "042", 240 -> "240")
+function getFramePath(index) {
+    const padded = String(index).padStart(3, '0');
+    return `/ezgif-73250375bd75d71b-png-split/ezgif-frame-${padded}.png`;
 }
 
-// Per-symbol particle count
-const perSymbolCount = isMobile ? 50 : 120;
-const totalParticleCount = perSymbolCount * particleSymbols.length;
+// Current & target scroll animation progress (0.0 to 1.0)
+let currentFrameProgress = 0;
+let targetFrameProgress = 0;
+let currentRenderedIndex = -1;
 
-// We store all particle groups and their geometries for animation & theme updates
-const particleGroups = [];
-const allParticleGeometries = [];
+// Size canvas with device pixel ratio support & cover-fit drawing
+function resizeCanvas() {
+    if (!canvas || !ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-particleSymbols.forEach((symbol, sIdx) => {
-    const t = sIdx / (particleSymbols.length - 1);
-    const color = cyan.clone().lerp(purple, t);
-    const colorHex = color.getHex();
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
 
-    const texCanvas = makeParticleTexture(symbol, colorHex);
-    const texture = new THREE.CanvasTexture(texCanvas);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(perSymbolCount * 3);
-    const cols = new Float32Array(perSymbolCount * 3);
+    // Ensure high quality image scaling
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    for (let i = 0; i < perSymbolCount; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * 80;
-        pos[i * 3 + 1] = (Math.random() - 0.5) * 80;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+    // Force re-render of current frame on resize
+    currentRenderedIndex = -1;
+    renderFrame(Math.round(currentFrameProgress * (FRAME_COUNT - 1)));
+}
 
-        cols[i * 3] = color.r;
-        cols[i * 3 + 1] = color.g;
-        cols[i * 3 + 2] = color.b;
+// Draw frame with aspect ratio preserve (cover) and crop out bottom watermark
+function drawImageProp(image) {
+    if (!ctx || !canvas || !image || !image.complete || !image.naturalWidth) return;
+
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const iw = image.naturalWidth;
+    const ih = image.naturalHeight;
+
+    // Crop out bottom 4.2% where the watermark is located
+    const cropBottom = Math.floor(ih * 0.042);
+    const effectiveH = ih - cropBottom;
+
+    const r = Math.max(cw / iw, ch / effectiveH);
+    const nw = iw * r;
+    const nh = effectiveH * r;
+    const cx = (cw - nw) * 0.5;
+    const cy = (ch - nh) * 0.5;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(image, 0, 0, iw, effectiveH, cx, cy, nw, nh);
+}
+
+// Render a specific frame index
+function renderFrame(index) {
+    const safeIndex = Math.max(0, Math.min(FRAME_COUNT - 1, index));
+    if (safeIndex === currentRenderedIndex) return;
+
+    const img = frames[safeIndex];
+    if (img && img.complete && img.naturalWidth > 0) {
+        drawImageProp(img);
+        currentRenderedIndex = safeIndex;
+    } else {
+        // Fallback to nearest loaded frame for butter-smooth visual continuity
+        for (let offset = 1; offset < 30; offset++) {
+            const prev = frames[safeIndex - offset];
+            if (prev && prev.complete && prev.naturalWidth > 0) {
+                drawImageProp(prev);
+                currentRenderedIndex = safeIndex - offset;
+                break;
+            }
+            const next = frames[safeIndex + offset];
+            if (next && next.complete && next.naturalWidth > 0) {
+                drawImageProp(next);
+                currentRenderedIndex = safeIndex + offset;
+                break;
+            }
+        }
     }
-
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-
-    const mat = new THREE.PointsMaterial({
-        size: isMobile ? 0.6 : 0.45,
-        map: texture,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.65,
-        sizeAttenuation: true,
-        depthWrite: false,
-    });
-
-    const points = new THREE.Points(geo, mat);
-    scene.add(points);
-    particleGroups.push(points);
-    allParticleGeometries.push(geo);
-});
-
-// Keep backward-compatible references for the theme switcher
-const particleGeometry = allParticleGeometries[0]; // used by theme funcs
-const particleCount = perSymbolCount; // used by updateParticleColors
-const particles = particleGroups[0]; // used by animate()
-
-// === FLOATING CODING SYMBOLS ===
-const geometries = [];
-
-// Coding symbols to display as floating items
-const codingSymbols = [
-    '</>', '{ }', '( )', '[ ]', '#',
-    '=>', '//', '&&', '||', ';;',
-    '_.', '!=', '++', '**', '~>'
-];
-
-function makeSymbolTexture(symbol, colorHex) {
-    const size = 256;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-
-    // Transparent background
-    ctx.clearRect(0, 0, size, size);
-
-    // Pick a font size relative to symbol length
-    const fontSize = symbol.length <= 2 ? 120 : symbol.length <= 3 ? 96 : 80;
-    ctx.font = `700 ${fontSize}px 'Courier New', monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Convert hex color to rgba with low opacity for a subtle look
-    const r = (colorHex >> 16) & 255;
-    const g = (colorHex >> 8) & 255;
-    const b = colorHex & 255;
-
-    // Glow effect
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.9)`;
-    ctx.shadowBlur = 28;
-
-    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.72)`;
-    ctx.fillText(symbol, size / 2, size / 2);
-
-    return canvas;
 }
 
-codingSymbols.forEach((symbol, i) => {
-    const t = i / (codingSymbols.length - 1);
-    const color = new THREE.Color().lerpColors(cyan, purple, t);
-    const colorHex = color.getHex();
+// Preload initial frames for instant start, then progressively preload all remaining frames
+function preloadFrames() {
+    for (let i = 1; i <= FRAME_COUNT; i++) {
+        const img = new Image();
+        img.src = getFramePath(i);
+        img.onload = () => {
+            imagesLoadedCount++;
+            if (!isFirstFrameRendered && (i === 1 || imagesLoadedCount > 3)) {
+                isFirstFrameRendered = true;
+                renderFrame(0);
+            }
+        };
+        frames.push(img);
+    }
+}
 
-    const canvas = makeSymbolTexture(symbol, colorHex);
-    const texture = new THREE.CanvasTexture(canvas);
+preloadFrames();
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-    const mat = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 1,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-    });
-
-    // Use a plane sized to 5×5 world units for better visibility
-    const geo = new THREE.PlaneGeometry(5, 5);
-    const mesh = new THREE.Mesh(geo, mat);
-
-    mesh.position.set(
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 20 - 10
-    );
-
-    mesh.userData = {
-        rotSpeed: {
-            x: 0.002 + Math.random() * 0.003,
-            y: 0.003 + Math.random() * 0.004,
-        },
-        floatSpeed: 0.25 + Math.random() * 0.45,
-        floatAmp: 1 + Math.random() * 2,
-        baseY: mesh.position.y,
-    };
-
-    scene.add(mesh);
-    geometries.push(mesh);
-});
-
-// === MOUSE TRACKING ===
-let mouseX = 0;
-let mouseY = 0;
-let targetMouseX = 0;
-let targetMouseY = 0;
-
-document.addEventListener('mousemove', (e) => {
-    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-// === SCROLL TRACKING ===
-// For non-Lenis (touch) devices, use window.scrollY directly
+// Unified scroll tracking for scroll progress
 let nativeScrollY = 0;
 window.addEventListener('scroll', () => {
     nativeScrollY = window.scrollY;
 }, { passive: true });
 
-// Unified scroll getter — always returns current scroll position
 function getScrollY() {
     return lenis ? lenisScrollY : nativeScrollY;
 }
 
 // === ANIMATION LOOP ===
-const clock = new THREE.Clock();
-
 function animate(time) {
     requestAnimationFrame(animate);
 
-    // Tick Lenis on every frame
+    // Tick Lenis smooth scrolling on every frame
     tickLenis(time);
 
-    const elapsed = clock.getElapsedTime();
-    const currentScrollY = getScrollY();
+    // Calculate max scrollable height
+    const maxScroll = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+    );
+    const scrollY = getScrollY();
 
-    // Smooth mouse follow
-    mouseX += (targetMouseX - mouseX) * 0.05;
-    mouseY += (targetMouseY - mouseY) * 0.05;
+    // Target scroll fraction (0 to 1)
+    targetFrameProgress = Math.max(0, Math.min(1, scrollY / maxScroll));
 
-    // Rotate all particle groups in sync
-    particleGroups.forEach(pg => {
-        pg.rotation.y = elapsed * 0.03 + mouseX * 0.15;
-        pg.rotation.x = elapsed * 0.02 + mouseY * 0.1;
-    });
+    // Smooth lerp for frame interpolation (ultra-smooth fluid scroll feel)
+    currentFrameProgress += (targetFrameProgress - currentFrameProgress) * 0.12;
 
-    // Scroll-based camera shift
-    camera.position.y = -currentScrollY * 0.003;
-
-    // Animate floating geometries
-    geometries.forEach((mesh) => {
-        const d = mesh.userData;
-        mesh.rotation.x += d.rotSpeed.x;
-        mesh.rotation.y += d.rotSpeed.y;
-        mesh.position.y = d.baseY + Math.sin(elapsed * d.floatSpeed) * d.floatAmp;
-    });
-
-    renderer.render(scene, camera);
+    const frameToRender = Math.round(currentFrameProgress * (FRAME_COUNT - 1));
+    renderFrame(frameToRender);
 }
 
 animate(0);
-
-// === RESIZE HANDLER ===
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
 
 // ================================================
 // UI INTERACTIONS
 // ================================================
 
-// === HAMBURGER MENU ===
+// === UNIFIED NAVIGATION & SMOOTH SCROLL CONTROLLER ===
+let isNavigating = false;
+let navTimer = null;
+
+function getAbsoluteTargetTop(targetEl) {
+    if (!targetEl) return 0;
+    if (targetEl.id === 'home') return 0;
+
+    // If section has a GSAP ScrollTrigger attached, check its exact start scroll position
+    const st = typeof ScrollTrigger !== 'undefined' 
+        ? ScrollTrigger.getAll().find(s => s.trigger === targetEl) 
+        : null;
+
+    if (st && typeof st.start === 'number') {
+        return Math.max(0, st.start);
+    }
+
+    const rect = targetEl.getBoundingClientRect();
+    const currentScroll = getScrollY();
+    // Offset for floating navbar pill
+    const navOffset = 64;
+    return Math.max(0, rect.top + currentScroll - navOffset);
+}
+
+function scrollToSection(targetId) {
+    const cleanId = (targetId || '').replace(/^#/, '');
+    if (!cleanId) return;
+
+    const targetEl = document.getElementById(cleanId);
+    if (!targetEl && cleanId !== 'home') return;
+
+    setActiveNavPill(cleanId);
+    isNavigating = true;
+    clearTimeout(navTimer);
+
+    // Keep active state locked during smooth scroll transition
+    navTimer = setTimeout(() => {
+        isNavigating = false;
+        updateScrollSpy();
+    }, 1200);
+
+    // Refresh ScrollTrigger to ensure all pin spacer heights and triggers are exact
+    if (typeof ScrollTrigger !== 'undefined') {
+        ScrollTrigger.refresh();
+    }
+
+    const targetPos = (cleanId === 'home') ? 0 : getAbsoluteTargetTop(targetEl);
+
+    if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(targetPos, {
+            duration: 1.1,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            onComplete: () => {
+                isNavigating = false;
+                updateScrollSpy();
+            }
+        });
+    } else {
+        window.scrollTo({ top: targetPos, behavior: 'smooth' });
+    }
+
+    // Update URL hash smoothly without jump
+    if (history.replaceState) {
+        history.replaceState(null, '', '#' + cleanId);
+    }
+}
+
+// === FLOATING PILL NAVBAR SCROLLSPY & NAVIGATION ===
+const navPillItems = document.querySelectorAll('.nav-pill-item');
+const trackedSectionIds = ['home', 'about', 'experience', 'projects', 'analytics', 'contact'];
+
+function setActiveNavPill(activeId) {
+    navPillItems.forEach((pill) => {
+        const section = pill.getAttribute('data-section');
+        if (section === activeId) {
+            pill.classList.add('active');
+        } else {
+            pill.classList.remove('active');
+        }
+    });
+}
+
+// Attach click navigation to pill items
+navPillItems.forEach((pill) => {
+    pill.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const section = pill.getAttribute('data-section') || (pill.getAttribute('href') || '').replace('#', '');
+        scrollToSection(section);
+    });
+});
+
+// Attach click navigation to brand logo (go to top / home)
+const brandLink = document.querySelector('.brand');
+if (brandLink) {
+    brandLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToSection('home');
+    });
+}
+
+// === HAMBURGER & MOBILE DROPDOWN MENU ===
 const menuBtn = document.getElementById('menuBtn');
 const dropdown = document.getElementById('dropdownMenu');
 const body = document.body;
 
-menuBtn.addEventListener('click', () => {
-    menuBtn.classList.toggle('active');
-    dropdown.classList.toggle('show');
-    body.classList.toggle('menu-open');
-});
-
-document.querySelectorAll('.dropdown a').forEach((link) => {
-    link.addEventListener('click', () => {
-        dropdown.classList.remove('show');
-        menuBtn.classList.remove('active');
-        body.classList.remove('menu-open');
+if (menuBtn && dropdown) {
+    menuBtn.addEventListener('click', () => {
+        menuBtn.classList.toggle('active');
+        dropdown.classList.toggle('show');
+        body.classList.toggle('menu-open');
     });
-});
 
-document.addEventListener('click', (e) => {
-    if (!menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.classList.remove('show');
-        menuBtn.classList.remove('active');
-        body.classList.remove('menu-open');
+    document.querySelectorAll('.dropdown a').forEach((link) => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                scrollToSection(href.replace('#', ''));
+            }
+            dropdown.classList.remove('show');
+            menuBtn.classList.remove('active');
+            body.classList.remove('menu-open');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('show');
+            menuBtn.classList.remove('active');
+            body.classList.remove('menu-open');
+        }
+    });
+}
+
+// ScrollSpy update based on true viewport bounding rects
+function updateScrollSpy() {
+    if (isNavigating) return;
+
+    const scrollY = getScrollY();
+    const viewportHeight = window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
+
+    // Top edge
+    if (scrollY < 80) {
+        setActiveNavPill('home');
+        return;
     }
-});
+
+    // Bottom edge
+    if (scrollY + viewportHeight >= docHeight - 60) {
+        setActiveNavPill('contact');
+        return;
+    }
+
+    const triggerLine = viewportHeight * 0.35;
+    let currentSection = 'home';
+
+    for (const id of trackedSectionIds) {
+        const sectionEl = document.getElementById(id);
+        if (sectionEl) {
+            const rect = sectionEl.getBoundingClientRect();
+            if (rect.top <= triggerLine && rect.bottom > 60) {
+                currentSection = id;
+            }
+        }
+    }
+
+    setActiveNavPill(currentSection);
+}
+
+window.addEventListener('scroll', updateScrollSpy, { passive: true });
+if (lenis) {
+    lenis.on('scroll', updateScrollSpy);
+}
 
 // === TYPING EFFECT ===
 const roles = ['Full Stack Developer', 'Python Developer', 'Software Developer'];
@@ -773,10 +812,6 @@ const themeOverlay = document.getElementById('themeOverlay');
 let isLightTheme = false;
 let isTransitioning = false;
 
-// Light theme colors for Three.js
-const lightGrey = new THREE.Color(0x333333);
-const lightDark = new THREE.Color(0x888888);
-
 // Restore saved theme preference (default: light)
 const savedTheme = localStorage.getItem('portfolio-theme');
 if (savedTheme === 'dark') {
@@ -785,153 +820,47 @@ if (savedTheme === 'dark') {
 } else {
     document.documentElement.setAttribute('data-theme', 'light');
     isLightTheme = true;
-    // Immediately set particle colors to light theme
-    updateParticleColors(lightGrey, lightDark);
-    updateSymbolColors(lightGrey, lightDark);
 }
 
-themeToggle.addEventListener('click', () => {
-    if (isTransitioning) return;
-    isTransitioning = true;
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        if (isTransitioning) return;
+        isTransitioning = true;
 
-    // 1. Start 3D page flip animation
-    document.body.classList.add('theme-transitioning');
-    themeOverlay.classList.add('flipping');
+        // 1. Start 3D page flip animation
+        document.body.classList.add('theme-transitioning');
+        if (themeOverlay) themeOverlay.classList.add('flipping');
 
-    // 2. At the midpoint of the flip (500ms), actually toggle the theme
-    setTimeout(() => {
-        isLightTheme = !isLightTheme;
+        // 2. At the midpoint of the flip (500ms), toggle the theme attribute
+        setTimeout(() => {
+            isLightTheme = !isLightTheme;
 
-        if (isLightTheme) {
-            document.documentElement.setAttribute('data-theme', 'light');
-            localStorage.setItem('portfolio-theme', 'light');
-            // Transition Three.js to light colors
-            animateParticleColors(cyan, purple, lightGrey, lightDark, 500);
-            updateSymbolColors(lightGrey, lightDark);
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('portfolio-theme', 'dark');
-            // Transition Three.js back to dark colors
-            animateParticleColors(lightGrey, lightDark, cyan, purple, 500);
-            updateSymbolColors(cyan, purple);
-        }
-    }, 450);
-
-    // 3. Cleanup after animation completes
-    setTimeout(() => {
-        document.body.classList.remove('theme-transitioning');
-        themeOverlay.classList.remove('flipping');
-        isTransitioning = false;
-    }, 1100);
-});
-
-// === Animate particle color transition (all groups) ===
-function animateParticleColors(fromA, fromB, toA, toB, duration) {
-    const startTime = performance.now();
-
-    // Snapshot starting colors for each group
-    const snapshots = allParticleGeometries.map(geo => {
-        const attr = geo.getAttribute('color');
-        return { attr, start: new Float32Array(attr.array) };
-    });
-
-    // Compute per-group target colors
-    const targets = allParticleGeometries.map((geo, gIdx) => {
-        const attr = geo.getAttribute('color');
-        const count = attr.count;
-        const t = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-            const mix = gIdx / (allParticleGeometries.length - 1);
-            const target = toA.clone().lerp(toB, mix);
-            t[i * 3] = target.r;
-            t[i * 3 + 1] = target.g;
-            t[i * 3 + 2] = target.b;
-        }
-        return t;
-    });
-
-    function stepColor(now) {
-        const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        snapshots.forEach((snap, gIdx) => {
-            const target = targets[gIdx];
-            for (let i = 0; i < snap.attr.array.length; i++) {
-                snap.attr.array[i] = snap.start[i] + (target[i] - snap.start[i]) * ease;
+            if (isLightTheme) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('portfolio-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('portfolio-theme', 'dark');
             }
-            snap.attr.needsUpdate = true;
-        });
+        }, 450);
 
-        if (t < 1) requestAnimationFrame(stepColor);
-    }
-
-    requestAnimationFrame(stepColor);
-
-    // Also regenerate textures for target colors
-    setTimeout(() => {
-        particleGroups.forEach((pg, gIdx) => {
-            const mix = gIdx / (particleGroups.length - 1);
-            const c = toA.clone().lerp(toB, mix);
-            const newTex = new THREE.CanvasTexture(
-                makeParticleTexture(particleSymbols[gIdx % particleSymbols.length], c.getHex())
-            );
-            if (pg.material.map) pg.material.map.dispose();
-            pg.material.map = newTex;
-            pg.material.needsUpdate = true;
-        });
-    }, duration);
-}
-
-// === Instantly set particle colors (all groups) ===
-function updateParticleColors(colorA, colorB) {
-    allParticleGeometries.forEach((geo, gIdx) => {
-        const attr = geo.getAttribute('color');
-        const mix = gIdx / (allParticleGeometries.length - 1);
-        const c = colorA.clone().lerp(colorB, mix);
-        for (let i = 0; i < attr.count; i++) {
-            attr.array[i * 3] = c.r;
-            attr.array[i * 3 + 1] = c.g;
-            attr.array[i * 3 + 2] = c.b;
-        }
-        attr.needsUpdate = true;
-    });
-
-    // Also regenerate textures
-    particleGroups.forEach((pg, gIdx) => {
-        const mix = gIdx / (particleGroups.length - 1);
-        const c = colorA.clone().lerp(colorB, mix);
-        const newTex = new THREE.CanvasTexture(
-            makeParticleTexture(particleSymbols[gIdx % particleSymbols.length], c.getHex())
-        );
-        if (pg.material.map) pg.material.map.dispose();
-        pg.material.map = newTex;
-        pg.material.needsUpdate = true;
-    });
-}
-
-// === Update floating coding symbol colors ===
-function updateSymbolColors(colorA, colorB) {
-    if (typeof geometries === 'undefined' || !Array.isArray(geometries)) return;
-    geometries.forEach((mesh, i) => {
-        const t = i / (geometries.length - 1);
-        const color = new THREE.Color().lerpColors(colorA, colorB, t);
-        const colorHex = color.getHex();
-
-        const newCanvas = makeSymbolTexture(codingSymbols[i % codingSymbols.length], colorHex);
-        const newTexture = new THREE.CanvasTexture(newCanvas);
-
-        if (mesh.material.map) {
-            mesh.material.map.dispose();
-        }
-        mesh.material.map = newTexture;
-        mesh.material.needsUpdate = true;
+        // 3. Cleanup after animation completes
+        setTimeout(() => {
+            document.body.classList.remove('theme-transitioning');
+            if (themeOverlay) themeOverlay.classList.remove('flipping');
+            isTransitioning = false;
+        }, 1100);
     });
 }
 // ================================================
-// PRELOADER
+// PRELOADER & HERO ENTRANCE
 // ================================================
-window.addEventListener('load', () => {
+let isPreloaderDismissed = false;
+
+function dismissPreloader() {
+    if (isPreloaderDismissed) return;
+    isPreloaderDismissed = true;
+
     const preloader = document.getElementById('preloader');
     const body = document.body;
 
@@ -939,45 +868,50 @@ window.addEventListener('load', () => {
     Splitting({ target: '.hero-title', by: 'chars' });
 
     if (preloader) {
-        // Show preloader for at least 2.5s to let the 3D name animation shine
-        setTimeout(() => {
-            preloader.classList.add('fade-out');
-            body.classList.remove('loading');
-
-            // Hide scroll-cue initially or animate it
-            gsap.set('.scroll-cue', { opacity: 0 });
-
-            // Staggered Entrance Animation
-            const heroTl = gsap.timeline();
-            heroTl.from('.hero-title .char', {
-                y: 60,
-                opacity: 0,
-                rotateX: -70,
-                stagger: 0.03,
-                duration: 0.8,
-                ease: 'back.out(1.5)',
-            })
-                .from('.hero-subtitle', {
-                    y: 30,
-                    opacity: 0,
-                    duration: 0.6,
-                    ease: 'power3.out',
-                }, '-=0.4')
-                .from('.socials-glass .glass-btn', {
-                    y: 20,
-                    opacity: 0,
-                    stagger: 0.08,
-                    duration: 0.5,
-                    ease: 'power2.out',
-                }, '-=0.3')
-                .to('.scroll-cue', {
-                    opacity: 0.8,
-                    duration: 0.5,
-                }, '-=0.1');
-
-        }, 2500);
+        preloader.classList.add('fade-out');
+        body.classList.remove('loading');
     }
-});
+
+    // Hide scroll-cue initially or animate it
+    gsap.set('.scroll-cue', { opacity: 0 });
+
+    // Staggered Entrance Animation
+    const heroTl = gsap.timeline();
+    heroTl.from('.hero-title .char', {
+        y: 60,
+        opacity: 0,
+        rotateX: -70,
+        stagger: 0.03,
+        duration: 0.7,
+        ease: 'back.out(1.5)',
+    })
+        .from('.hero-subtitle', {
+            y: 30,
+            opacity: 0,
+            duration: 0.5,
+            ease: 'power3.out',
+        }, '-=0.35')
+        .from('.socials-glass .glass-btn', {
+            y: 20,
+            opacity: 0,
+            stagger: 0.06,
+            duration: 0.45,
+            ease: 'power2.out',
+        }, '-=0.25')
+        .to('.scroll-cue', {
+            opacity: 0.8,
+            duration: 0.4,
+        }, '-=0.1');
+}
+
+// Brief, crisp display of splash screen (~800ms) then enter main page
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(dismissPreloader, 800);
+    });
+} else {
+    setTimeout(dismissPreloader, 800);
+}
 
 // ================================================
 // GA4 — ANALYTICS EVENT TRACKING
