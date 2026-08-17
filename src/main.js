@@ -106,11 +106,14 @@ function drawImageProp(image) {
     const cropBottom = Math.floor(ih * 0.042);
     const effectiveH = ih - cropBottom;
 
+    // Cover math: preserve aspect ratio, fill entire viewport canvas
+    const isMobile = window.innerWidth <= 768;
     const r = Math.max(cw / iw, ch / effectiveH);
     const nw = iw * r;
     const nh = effectiveH * r;
     const cx = (cw - nw) * 0.5;
-    const cy = (ch - nh) * 0.5;
+    // On mobile devices, center the video frame slightly higher or balanced so the subject's face is prominent
+    const cy = isMobile ? Math.max(ch - nh, (ch - nh) * 0.35) : (ch - nh) * 0.5;
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -804,11 +807,11 @@ if (objectiveCard && !isTouchDevice) {
 }
 
 // ================================================
-// 3D THEME SWITCHER
+// ================================================
+// RADIAL CIRCULAR RIPPLE THEME SWITCHER
 // ================================================
 
 const themeToggle = document.getElementById('themeToggle');
-const themeOverlay = document.getElementById('themeOverlay');
 let isLightTheme = false;
 let isTransitioning = false;
 
@@ -822,34 +825,91 @@ if (savedTheme === 'dark') {
     isLightTheme = true;
 }
 
+function executeThemeToggle() {
+    isLightTheme = !isLightTheme;
+    if (isLightTheme) {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('portfolio-theme', 'light');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('portfolio-theme', 'dark');
+    }
+}
+
 if (themeToggle) {
     themeToggle.addEventListener('click', () => {
         if (isTransitioning) return;
-        isTransitioning = true;
 
-        // 1. Start 3D page flip animation
-        document.body.classList.add('theme-transitioning');
-        if (themeOverlay) themeOverlay.classList.add('flipping');
+        // Calculate exact center position of the button on screen
+        const rect = themeToggle.getBoundingClientRect();
+        const x = Math.round(rect.left + rect.width / 2);
+        const y = Math.round(rect.top + rect.height / 2);
 
-        // 2. At the midpoint of the flip (500ms), toggle the theme attribute
-        setTimeout(() => {
-            isLightTheme = !isLightTheme;
+        // Maximum distance from button center to the furthest viewport corner
+        const endRadius = Math.ceil(
+            Math.hypot(
+                Math.max(x, window.innerWidth - x),
+                Math.max(y, window.innerHeight - y)
+            )
+        );
 
-            if (isLightTheme) {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('portfolio-theme', 'light');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('portfolio-theme', 'dark');
-            }
-        }, 450);
+        // Modern browsers: View Transitions API with circular clip-path wave
+        if (document.startViewTransition) {
+            isTransitioning = true;
+            const transition = document.startViewTransition(() => {
+                executeThemeToggle();
+            });
 
-        // 3. Cleanup after animation completes
-        setTimeout(() => {
-            document.body.classList.remove('theme-transitioning');
-            if (themeOverlay) themeOverlay.classList.remove('flipping');
-            isTransitioning = false;
-        }, 1100);
+            transition.ready.then(() => {
+                const clipPath = [
+                    `circle(0px at ${x}px ${y}px)`,
+                    `circle(${endRadius}px at ${x}px ${y}px)`
+                ];
+
+                document.documentElement.animate(
+                    {
+                        clipPath: clipPath
+                    },
+                    {
+                        duration: 600,
+                        easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+                        pseudoElement: '::view-transition-new(root)'
+                    }
+                ).onfinish = () => {
+                    isTransitioning = false;
+                };
+            }).catch(() => {
+                isTransitioning = false;
+            });
+        } else {
+            // Fallback: Ripple Circle overlay
+            isTransitioning = true;
+            const ripple = document.createElement('div');
+            ripple.className = 'theme-ripple-circle';
+            const size = endRadius * 2.2;
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            ripple.style.background = isLightTheme ? '#0a0a0f' : '#f5f5f5';
+            document.body.appendChild(ripple);
+
+            requestAnimationFrame(() => {
+                ripple.classList.add('active');
+            });
+
+            setTimeout(() => {
+                executeThemeToggle();
+            }, 280);
+
+            setTimeout(() => {
+                ripple.style.opacity = '0';
+                setTimeout(() => {
+                    ripple.remove();
+                    isTransitioning = false;
+                }, 300);
+            }, 600);
+        }
     });
 }
 // ================================================
