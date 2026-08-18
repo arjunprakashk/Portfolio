@@ -622,7 +622,6 @@ if (!isTouchDevice) {
 }
 
 // === PROJECTS STACKING CARDS SCROLL TRIGGER ===
-// Only enabled on desktop viewports (>= 769px)
 const projectsSection = document.getElementById('projects');
 const cards = gsap.utils.toArray('.horizontal-card');
 
@@ -638,47 +637,55 @@ function setupStackingCards() {
 
     const isMobile = window.innerWidth < 769;
 
-    // Create the stacking timeline
+    // Set starting states
+    cards.forEach((card, index) => {
+        const inner = card.querySelector('.horizontal-card-inner');
+        if (index === 0) {
+            gsap.set(card, { y: 0, scale: 1, opacity: 1, zIndex: 1 });
+            if (inner) inner.style.setProperty('--stack-dim', '0');
+        } else {
+            // Push subsequent cards down off the view ready to cascade smoothly
+            gsap.set(card, { y: isMobile ? '80vh' : '100vh', scale: 0.94, opacity: 0, zIndex: index + 1 });
+            if (inner) inner.style.setProperty('--stack-dim', '0');
+        }
+    });
+
+    // Create the stacking timeline with ScrollTrigger scrub
     const tl = gsap.timeline({
         scrollTrigger: {
             trigger: projectsSection,
             start: 'top top',
-            end: () => `+=${window.innerHeight * (cards.length - 0.5)}`,
+            end: () => `+=${window.innerHeight * (cards.length - 0.2)}`,
             pin: true,
-            scrub: 1,
+            scrub: 0.8,
+            anticipatePin: 1,
             invalidateOnRefresh: true,
-        }
-    });
-
-    // Set starting states
-    cards.forEach((card, index) => {
-        if (index === 0) {
-            gsap.set(card, { y: 0, scale: 1, opacity: 1, zIndex: 1 });
-        } else {
-            // Push subsequent cards completely down
-            gsap.set(card, { y: '100vh', scale: 0.95, opacity: 0, zIndex: index + 1 });
         }
     });
 
     // Stagger card stacking sequence
     for (let i = 1; i < cards.length; i++) {
-        // Slide card up
+        const label = `card-${i}`;
+
+        // 1. Slide incoming card smoothly up into place
         tl.to(cards[i], {
             y: 0,
             opacity: 1,
             scale: 1,
             duration: 1,
-            ease: 'power2.out',
-        }, `card-${i}`);
+            ease: 'power2.inOut',
+        }, label);
 
-        // Scale and shift preceding cards down in depth
+        // 2. Scale, shift, and slightly darken preceding cards as layers stack
         for (let j = 0; j < i; j++) {
             const depth = i - j;
-            const yShift = isMobile ? -depth * 16 : -depth * 25;
-            const scaleFactor = isMobile ? 1 - depth * 0.03 : 1 - depth * 0.04;
+            const yShift = isMobile ? -depth * 14 : -depth * 22;
+            const scaleFactor = isMobile ? Math.max(0.88, 1 - depth * 0.035) : Math.max(0.86, 1 - depth * 0.045);
+            const dimFactor = Math.min(0.7, depth * 0.25);
 
-            // On mobile, fade out cards that are more than 1 layer deep to prevent overlapping text/content
-            let opacityVal = Math.max(0.3, 1 - depth * 0.35);
+            const prevInner = cards[j].querySelector('.horizontal-card-inner');
+
+            let opacityVal = Math.max(0.35, 1 - depth * 0.25);
             if (isMobile && depth > 1) {
                 opacityVal = 0;
             }
@@ -688,8 +695,15 @@ function setupStackingCards() {
                 y: yShift,
                 opacity: opacityVal,
                 duration: 1,
-                ease: 'power2.out',
-            }, `card-${i}`);
+                ease: 'power2.inOut',
+                onUpdate: function() {
+                    if (prevInner) {
+                        const progress = this.progress();
+                        const currentDim = dimFactor * progress;
+                        prevInner.style.setProperty('--stack-dim', currentDim.toString());
+                    }
+                }
+            }, label);
         }
     }
 }
@@ -964,13 +978,31 @@ function dismissPreloader() {
         }, '-=0.1');
 }
 
-// Brief, crisp display of splash screen (~800ms) then enter main page
+// Brief, crisp display of splash screen (~800ms) after fonts and DOM are ready
+function initPreloaderDismissal() {
+    const minDelay = 800;
+    const startTime = performance.now();
+
+    const proceed = () => {
+        const elapsed = performance.now() - startTime;
+        const remaining = Math.max(0, minDelay - elapsed);
+        setTimeout(dismissPreloader, remaining);
+    };
+
+    if (document.fonts && document.fonts.ready) {
+        Promise.race([
+            document.fonts.ready,
+            new Promise(res => setTimeout(res, 1000))
+        ]).then(proceed).catch(proceed);
+    } else {
+        setTimeout(dismissPreloader, minDelay);
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(dismissPreloader, 800);
-    });
+    document.addEventListener('DOMContentLoaded', initPreloaderDismissal);
 } else {
-    setTimeout(dismissPreloader, 800);
+    initPreloaderDismissal();
 }
 
 // ================================================

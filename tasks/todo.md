@@ -1,6 +1,6 @@
-# Floating Pill Navbar Tasklist
+# Card Stack Animation Tasklist
 
-- [x] Update `index.html` navbar structure to integrate floating capsule with active expanding pill links
-- [x] Update `src/style.css` with floating capsule layout, glassmorphism, active pill animations, and light/dark theme support
-- [x] Update `src/main.js` with ScrollSpy and navigation click handlers
-- [x] Verify responsiveness and build correctness (`npx vite build`)
+- [x] Connect Lenis tick directly with GSAP ticker & lagSmoothing for frame synchronization in `src/main.js`
+- [x] Upgrade card overlay and cascading stack styles in `src/style.css`
+- [x] Implement enhanced cascading stack timeline with smooth scale, y-translation, and brightness in `src/main.js`
+- [x] Test and verify build with `npx vite build`

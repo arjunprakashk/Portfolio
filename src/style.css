@@ -44,8 +44,8 @@ html.lenis body {
     --gradient-accent: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
     --gradient-glow: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
 
-    --font-heading: 'Space Grotesk', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     --radius-sm: 10px;
     --radius-md: 16px;
@@ -868,7 +868,7 @@ section {
     font-family: var(--font-heading);
     font-size: 24px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-cyan);
 }
 
 .stat-label {
@@ -1513,8 +1513,9 @@ section {
     width: 100%;
     max-width: 760px;
     height: 580px;
-    perspective: 1200px;
-    will-change: transform, opacity;
+    perspective: 1400px;
+    transform-style: preserve-3d;
+    will-change: transform, opacity, filter;
 }
 
 .horizontal-card-inner {
@@ -1527,13 +1528,26 @@ section {
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 16px;
+    border-radius: 18px;
     overflow: hidden;
     box-shadow:
-        0 20px 50px -10px rgba(0, 0, 0, 0.7),
+        0 25px 60px -12px rgba(0, 0, 0, 0.75),
         0 0 1px 1px rgba(255, 255, 255, 0.1) inset;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
     transform-style: preserve-3d;
+}
+
+/* Stacking Darkening / Vignette Overlay for Depth */
+.horizontal-card-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(5, 7, 15, 0) 0%, rgba(5, 7, 15, 0.8) 100%);
+    opacity: var(--stack-dim, 0);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+    z-index: 10;
 }
 
 .horizontal-card-inner::before {
@@ -1546,6 +1560,7 @@ section {
     background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.8) 50%, transparent 100%);
     opacity: 0.6;
     transition: opacity 0.4s ease;
+    z-index: 11;
 }
 
 .horizontal-card-inner:hover {
@@ -2648,29 +2663,29 @@ section {
 }
 
 /* ================================================
-   LIGHT THEME — B&W
+   LIGHT THEME — B&W & Premium Clean Light
 ================================================ */
 [data-theme="light"] {
-    --bg-primary: #f5f5f5;
-    --bg-card: rgba(255, 255, 255, 0.75);
-    --bg-glass: rgba(255, 255, 255, 0.6);
+    --bg-primary: #f8fafc;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --bg-glass: rgba(255, 255, 255, 0.7);
     --border-glass: rgba(0, 0, 0, 0.08);
     --border-hover: rgba(0, 0, 0, 0.25);
 
-    --text-primary: #111111;
-    --text-secondary: #444444;
-    --text-muted: #888888;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
 
-    --accent-cyan: #0a0a0a;
-    --accent-purple: #333333;
-    --accent-pink: #555555;
-    --gradient-accent: linear-gradient(135deg, #222, #555);
-    --gradient-glow: linear-gradient(135deg, #222, #555, #777);
+    --accent-cyan: #0f172a;
+    --accent-purple: #334155;
+    --accent-pink: #475569;
+    --gradient-accent: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+    --gradient-glow: linear-gradient(135deg, #0f172a 0%, #334155 50%, #64748b 100%);
 }
 
 /* Body background */
 [data-theme="light"] body {
-    background: #f5f5f5;
+    background: #f8fafc;
 }
 
 /* Canvas visibility in light mode */
@@ -4810,4 +4825,155 @@ body::after {
 
 [data-theme="light"] .horizontal-content .project-desc {
     color: #475569;
+}
+
+/* ================================================
+   ANALYTICS LIGHT THEME OVERRIDES
+================================================ */
+[data-theme="light"] .analytics-title {
+    color: #0f172a;
+}
+
+[data-theme="light"] .analytics-subtitle {
+    color: #475569;
+}
+
+[data-theme="light"] .analytics-card .bento-inner {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .bento-header-title h3 {
+    color: #0f172a;
+}
+
+[data-theme="light"] .bento-header-title svg {
+    color: #0f172a;
+}
+
+[data-theme="light"] .live-indicator {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="light"] .live-text {
+    color: #059669;
+}
+
+[data-theme="light"] .large-stat-box {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .large-stat-box:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .large-stat-val {
+    color: #0f172a;
+}
+
+[data-theme="light"] .large-stat-lbl {
+    color: #64748b;
+}
+
+[data-theme="light"] .cta-bar-name {
+    color: #334155;
+}
+
+[data-theme="light"] .cta-bar-count {
+    color: #0f172a;
+}
+
+[data-theme="light"] .cta-bar-track {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .cta-bar-fill {
+    background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+}
+
+[data-theme="light"] .session-duration-box {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .session-duration-val {
+    color: #0f172a;
+}
+
+[data-theme="light"] .session-duration-lbl {
+    color: #64748b;
+}
+
+[data-theme="light"] .scroll-milestones-lbl {
+    color: #334155;
+}
+
+[data-theme="light"] .milestone-pill {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #64748b;
+}
+
+[data-theme="light"] .milestone-pill.achieved {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: rgba(15, 23, 42, 0.2);
+    color: #0f172a;
+}
+
+[data-theme="light"] .milestone-pill.achieved .milestone-status-dot {
+    background-color: #0f172a;
+    box-shadow: 0 0 6px rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="light"] .geo-item {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .geo-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .geo-city {
+    color: #334155;
+}
+
+[data-theme="light"] .geo-percentage {
+    color: #0f172a;
+}
+
+[data-theme="light"] .geo-marker.active-pulse {
+    background-color: #059669;
+    box-shadow: 0 0 8px #059669;
+}
+
+[data-theme="light"] .skill-proficiency-track {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .scroll-cue {
+    color: #64748b;
+}
+
+[data-theme="light"] .scroll-cue-line {
+    background: linear-gradient(to bottom, #0f172a, transparent);
+}
+
+[data-theme="light"] #cursor-dot {
+    background: #0f172a;
+    box-shadow: 0 0 10px rgba(15, 23, 42, 0.3);
+}
+
+[data-theme="light"] #cursor-ring {
+    border-color: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="light"] body.cursor-hover #cursor-ring {
+    border-color: rgba(15, 23, 42, 0.7);
+    background-color: rgba(15, 23, 42, 0.05);
 }
